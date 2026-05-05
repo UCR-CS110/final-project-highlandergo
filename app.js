@@ -3,6 +3,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const session = require('express-session');
 const path = require('path');
+const connectDB = require('./db');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -16,6 +17,9 @@ app.use(session({
   resave: false,
   saveUninitialized: true,
 }));
+
+connectDB();
+app.listen(3000, () => console.log('Server running on port 3000'));
 
 app.get('/', (req, res) => {
   res.send('Server is running on localhost:3000');
