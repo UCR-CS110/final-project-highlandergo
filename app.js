@@ -4,6 +4,7 @@ const session = require('express-session');
 const path = require('path');
 const connectDB = require('./db');
 const authRoutes = require("./routes/auth");
+const mapRoutes = require("./routes/map");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -17,6 +18,7 @@ app.use(session({
     saveUninitialized: false,
 }));
 app.use('/auth', authRoutes);
+app.use('/map', mapRoutes);
 
 app.get('/', (req, res) => {
     res.send('Highlander GO! is running on localhost:3000');
