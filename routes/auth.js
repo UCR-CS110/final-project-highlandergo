@@ -58,7 +58,7 @@ router.post("/login", async (req, res) => {
     res.redirect("/");
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Server error during lofin" });
+    res.status(500).json({ error: "Server error during login" });
   }
 });
 
