@@ -38,6 +38,11 @@ app.use("/api/spots", spotRoutes);
 
 app.use("/auth", authRoutes);
 app.use("/map", mapRoutes);
+
+app.get("/api/me", (req, res) => {
+  res.json({ userId: req.session.userId || null });
+});
+
 app.get("/", (req, res) => {
   res.send("Highlander GO! is running on localhost:3000");
 });
