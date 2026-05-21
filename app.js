@@ -6,6 +6,8 @@ const path = require("path");
 const connectDB = require("./db");
 const authRoutes = require("./routes/auth");
 const mapRoutes = require("./routes/map");
+const commentRoutes = require("./routes/comments");
+const spotRoutes = require("./routes/spots");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -33,11 +35,12 @@ app.use(
     },
   }),
 );
-const spotRoutes = require("./routes/spots");
-app.use("/api/spots", spotRoutes);
 
+app.use("/api/spots", spotRoutes);
+app.use("/api/spots", commentRoutes);
 app.use("/auth", authRoutes);
 app.use("/map", mapRoutes);
+
 app.get("/", (req, res) => {
   res.send("Highlander GO! is running on localhost:3000");
 });
