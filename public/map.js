@@ -6,12 +6,43 @@ const map = L.map("map", { zoomControl: true }).setView(
 L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
   maxZoom: 20,
   attribution:
-    '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> | <a href="https://www.flaticon.com/free-icons/restaurant" title="restaurant icons"> Food icon created by Setiawanap</a> | <a href="https://www.flaticon.com/free-icons/library" title="library icons">Study icons created by Fahrul Oktaviana</a> | <a href="https://www.flaticon.com/free-icons/pin" title="pin icons">Other pin created by Freepik</a>',
 }).addTo(map);
 
 let currentUserId = null;
 const markerMap = {};
 const spotDataMap = {};
+
+var foodIcon = L.icon({
+  iconUrl: "/mapPins/restaurant.png",
+  iconSize: [40, 40],
+  iconAnchor: [16, 32],
+  popupAnchor: [0, -32]
+});
+
+var studyIcon = L.icon({
+  iconUrl: "/mapPins/library.png",
+  iconSize: [40, 40],
+  iconAnchor: [16, 32],
+  popupAnchor: [0, -32]
+});
+
+var otherIcon = L.icon({
+  iconUrl: "/mapPins/maps-and-flags.png",
+  iconSize: [40, 40],
+  iconAnchor: [16, 32],
+  popupAnchor: [0, -32]
+});
+
+function getCategoryIcon(category){
+  if(category === "food"){
+    return foodIcon;
+  } else if(category === "study"){
+    return studyIcon;
+  } else{
+    return otherIcon;
+  }
+}
 
 async function loadCurrentUser(){
   try{
@@ -32,6 +63,9 @@ function buildCreateForm(){
       <label for="spot-title">Title <span class="required">*</span></label>
 
       <input type="text" id="spot-title" placeholder="e.g. Orbach Library" maxlength="100" />
+
+      <label for="spot-rating">Your Rating (0-5, optional)</label>
+      <input type="number" id="spot-rating" min="0" max="5" step="0.5" placeholder="e.g. 4.5" />
 
       <label for="spot-description">Description / Review</label>
       <textarea id="spot-description" rows="3"></textarea>
@@ -114,31 +148,19 @@ function addSpotMarker(spot){
   spotDataMap[spot._id] = spot;
 
   const [lng, lat] = spot.location.coordinates;
-  const marker = L.marker([lat, lng]).addTo(map);
+  const marker = L.marker([lat, lng], {icon: getCategoryIcon(spot.category)}).addTo(map);
 
   markerMap[spot._id] = marker;
 
   marker.bindPopup(buildViewPopup(spot), { maxWidth:200 });
 
   marker.on("popupopen", () => {
-    const currentSpot = spotDataMap[spot._id];
-    const editBtn = document.getElementById("edit-spot-" + currentSpot._id);
-    const deleteBtn = document.getElementById("delete-spot-" + currentSpot._id);
+    attachViewListeners(spot._id);
+  });
 
-    if(editBtn){
-      editBtn.onclick = (e) => {
-        e.stopPropagation();
-        openEditForm(currentSpot._id);
-      };
-    }
-
-    if(deleteBtn){
-      deleteBtn.onclick = (e) => {
-        e.stopPropagation();
-        deleteSpot(currentSpot._id);
-      };
-    }
-  })
+  marker.on("popupclose", () => {
+    marker.setPopupContent(buildViewPopup(spotDataMap[spot._id]));
+  });
 }
 
 async function loadSpots() {
@@ -157,6 +179,16 @@ async function submitSpot(lat, lng) {
   const description = document.getElementById("spot-description").value.trim();
   const category = document.getElementById("spot-category").value;
   const errorEl = document.getElementById("create-error");
+  const ratingRaw = document.getElementById("spot-rating").value.trim();
+
+  if(ratingRaw !== ""){
+    const ratingVal = parseFloat(ratingRaw);
+    if(isNaN(ratingVal) || ratingVal < 0 || ratingVal > 5){
+      errorEl.textContent = "Rating must be between 0 and 5.";
+      errorEl.style.display = "block";
+      return;
+    }
+  }
 
   if (!title) {
     errorEl.textContent = "Title is required.";
@@ -169,7 +201,7 @@ async function submitSpot(lat, lng) {
     const res = await fetch("/api/spots", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, description, category, lat, lng }),
+      body: JSON.stringify({ title, description, category, lat, lng, rating: ratingRaw !== "" ? parseFloat(ratingRaw) : null }),
     });
 
     if (res.status === 401) {
@@ -205,6 +237,9 @@ function buildEditForm(spot){
 
       <label for="edit-title-${spot._id}">Title <span class="required">*</span></label>
       <input type="text" id="edit-title-${spot._id}" value="${spot.title}" maxlength="100" />
+
+      <label for="edit-rating-${spot._id}">Your Rating (0-5, optional)</label>
+      <input type="number" id="edit-rating-${spot._id}" min="0" max="5" step="0.5" placeholder="e.g. 4.5" value="${spot.ratingAvg > 0 ? spot.ratingAvg : ""}" />
 
       <label for="edit-description-${spot._id}">Description / Review</label>
       <textarea id="edit-description-${spot._id}" rows="3">${spot.description || ""}</textarea>
@@ -250,19 +285,30 @@ async function submitEdit(spotId){
   const description = document.getElementById("edit-description-" + spotId).value.trim();
   const category = document.getElementById("edit-category-" + spotId).value;
   const errorEl = document.getElementById("edit-error-" + spotId);
+  const ratingRaw = document.getElementById("edit-rating-" + spotId).value.trim();
 
   if (!title) {
     errorEl.textContent = "Title is required.";
     errorEl.style.display = "block";
     return;
   }
+
+  if (ratingRaw !== "") {
+    const ratingVal = parseFloat(ratingRaw);
+    if (isNaN(ratingVal) || ratingVal < 0 || ratingVal > 5) {
+      errorEl.textContent = "Rating must be a number between 0 and 5.";
+      errorEl.style.display = "block";
+      return;
+    }
+  }
+
   errorEl.style.display = "none";
 
   try {
     const res = await fetch("/api/spots/" + spotId, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, description, category }),
+      body: JSON.stringify({ title, description, category, rating: ratingRaw !== "" ? parseFloat(ratingRaw) : null }),
     });
 
     if (!res.ok) {
