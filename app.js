@@ -8,6 +8,7 @@ const authRoutes = require("./routes/auth");
 const mapRoutes = require("./routes/map");
 const commentRoutes = require("./routes/comments");
 const spotRoutes = require("./routes/spots");
+const searchRoutes = require("./routes/search");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -40,6 +41,7 @@ app.use("/api/spots", spotRoutes);
 app.use("/api/spots", commentRoutes);
 app.use("/auth", authRoutes);
 app.use("/map", mapRoutes);
+app.use("/api/search", searchRoutes);
 
 app.get("/api/me", (req, res) => {
   res.json({ userId: req.session.userId || null });

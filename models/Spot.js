@@ -55,5 +55,6 @@ const SpotSchema = new mongoose.Schema(
 );
 
 SpotSchema.index({ location: "2dsphere" });
+SpotSchema.index({ title: "text", description: "text", tags: "text" });
 
 module.exports = mongoose.model("Spot", SpotSchema);
