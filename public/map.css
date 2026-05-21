@@ -60,17 +60,17 @@ body {
   padding-left: 8px;
 }
 
-.create-spot-form {
+.create-spot-form, .edit-spot-form {
   font-family: sans-serif;
   min-width: 200px;
 }
 
-.create-spot-form h3 {
+.create-spot-form h3, .edit-spot-form h3 {
   margin: 0 0 10px 0;
   font-size: 1rem;
 }
 
-.create-spot-form label {
+.create-spot-form label, .edit-spot-form label {
   display: block;
   font-size: 0.8rem;
   font-weight: 600;
@@ -84,7 +84,12 @@ body {
 
 .create-spot-form input[type="text"],
 .create-spot-form textarea,
-.create-spot-form select {
+.create-spot-form select,
+.create-spot-form input[type="number"],
+.edit-spot-form input[type="number"]
+.edit-spot-form input[type="text"],
+.edit-spot-form textarea,
+.edit-spot-form select {
   width: 100%;
   padding: 6px 8px;
   border: 1px solid #ccc;
@@ -94,7 +99,7 @@ body {
   font-family: inherit;
 }
 
-.create-spot-form textarea {
+.create-spot-form textarea, .edit-spot-form textarea {
   resize: vertical;
 }
 
@@ -115,3 +120,26 @@ body {
   background: #517fce;
 }
 
+.spot-actions, .edit-form-buttons {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.btn-edit, .btn-delete, .btn-save, .btn-cancel {
+  flex: 1;
+  margin-top: 8px;
+  width: 50%;
+  padding: 8px;
+  background: #003DA5;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-edit:hover, .btn-delete:hover, .btn-save:hover, .btn-cancel:hover {
+  background: #517fce;
+}

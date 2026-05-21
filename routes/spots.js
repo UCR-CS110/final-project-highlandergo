@@ -36,7 +36,7 @@ router.get("/:id", async (req, res) => {
 
 router.post("/", isAuthenticated, async (req, res) => {
   try {
-    const { title, description, category, photos, tags, lat, lng } = req.body;
+    const { title, description, category, photos, tags, lat, lng, rating } = req.body;
     const spot = await Spot.create({
       title,
       description,
@@ -48,6 +48,8 @@ router.post("/", isAuthenticated, async (req, res) => {
         coordinates: [parseFloat(lng), parseFloat(lat)],
       },
       author: req.session.userId,
+      ratingAvg: rating ? parseFloat(rating) : 0,
+      ratingCount: rating ? 1 : 0,
     });
     res.status(201).json(spot);
   } catch (err) {
@@ -66,12 +68,16 @@ router.put("/:id", isAuthenticated, async (req, res) => {
         .json({ error: "Not authorized to edit this spot" });
     }
 
-    const { title, description, category, photos, tags } = req.body;
+    const { title, description, category, photos, tags, rating } = req.body;
     spot.title = title || spot.title;
     spot.description = description || spot.description;
     spot.category = category || spot.category;
     spot.photos = photos || spot.photos;
     spot.tags = tags || spot.tags;
+    if (rating !== undefined){
+      spot.ratingAvg = rating ? parseFloat(rating) : 0;
+      spot.ratingCount = rating ? 1 : 0;
+    }
     await spot.save();
 
     res.json(spot);
