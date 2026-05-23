@@ -1,12 +1,55 @@
 # Highlander GO
 
-A Node.js application using Express and Mongoose.
+Our project is a social network app for UC Riverside students to connect more around campus. Users can drop pins on an interactive map to share and review their favorite spots around campus. Other students will also be able to browse pins, read reviews, and leave reviews of their own on full deployment.
 
-## Setup
+## Tech Stack
 
-1. Run `npm install`
-2. Create a `.env` file based on `.env.example`
-3. Run `node server.js`
+- Backend - Node.js, Express
+- Database - MongoDB Atlas
+- Frontend - HTML, CSS, JavaScript
+- Map - Leaflet.js with OpenStreetMap
 
-[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/c4wSHrp5)
-[![Open in Visual Studio Code](https://classroom.github.com/assets/open-in-vscode-2e0aaae1b6195c2367325f4f02e2d04e9abb55f0b24a779b69b11b9e10269abc.svg)](https://classroom.github.com/online_ide?assignment_repo_id=23789296&assignment_repo_type=AssignmentRepo)
+## Setup & Running Locally
+
+1. **Prerequisites**
+- Node.js
+- A MongoDB Atlas account
+
+2. **Clone the repository**
+   ```bash
+   git clone <repo-url>
+   cd final-project-highlandergo-andres-antonio-khant
+   ```
+
+3. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+4. **Configure .env file**
+
+   Copy `.env.example` to `.env` and fill in values according to template
+   
+   ```
+   ATLAS_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/myDatabase?retryWrites=true&w=majority
+   ```
+
+6. **Start the server**
+   ```bash
+   npm start
+   ```
+
+7. **Open the app**
+
+   Navigate to `http://localhost:3000` in your browser.
+
+## Features & Working Status
+
+### Fully Working
+
+- **User Registration & Login** — Create an account with a username, email, and password. Access user registration by navigating to `http://localhost:3000/auth/register` and user login by navigating to `http://localhost:3000/auth/login`
+- **Interactive Campus Map** — Leaflet.js map centered on the UCR campus. Access the interactive campus map by navigating to `http://localhost:3000/map`
+- **Drop Pins / Add Spots** — Click anywhere on the map to open a form and add a new spot with a title, category, description, and a rating.
+- **View Spot Details** — Click any existing pin to see the spot's title, category badge, rating, and description in a popup.
+- **Edit & Delete Spots** — Authors can edit or delete their own spots directly from the popup.
+- **Search API** — Backend supports a search api (`GET /api/search`).
