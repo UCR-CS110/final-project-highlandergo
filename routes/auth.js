@@ -67,7 +67,7 @@ router.get('/test', (req, res) => {
     res.send('auth router is working');
 });
 
-// ✅ Google OAuth - Step 1: redirect to Google
+// redirect to Google
 router.get('/google', (req, res) => {
     const params = new URLSearchParams({
         client_id: process.env.GOOGLE_CLIENT_ID,
@@ -78,7 +78,7 @@ router.get('/google', (req, res) => {
     res.redirect(`https://accounts.google.com/o/oauth2/v2/auth?${params}`);
 });
 
-// ✅ Google OAuth - Step 2: handle callback
+// handle callback
 router.get('/google/callback', async (req, res) => {
     try {
         const { code } = req.query;
