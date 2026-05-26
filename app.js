@@ -15,6 +15,40 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+const { mongoSanitize, helmet } = require("./middleware/sanitize");
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: [
+          "'self'",
+          "'unsafe-inline'",
+          "unpkg.com",
+          "cdn.jsdelivr.net",
+        ],
+        styleSrc: [
+          "'self'",
+          "'unsafe-inline'",
+          "unpkg.com",
+          "cdn.jsdelivr.net",
+        ],
+        imgSrc: [
+          "'self'",
+          "data:",
+          "*.openstreetmap.org",
+          "*.tile.openstreetmap.org",
+        ],
+        connectSrc: ["'self'", "*.openstreetmap.org"],
+      },
+    },
+  }),
+);
+app.use((req, res, next) => {
+  if (req.body) req.body = mongoSanitize(req.body);
+  if (req.params) req.params = mongoSanitize(req.params);
+  next();
+});
 app.use(express.static(path.join(__dirname, "public")));
 
 app.use(

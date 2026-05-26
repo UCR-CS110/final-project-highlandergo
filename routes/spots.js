@@ -2,6 +2,7 @@
 const express = require("express");
 const router = express.Router();
 const Spot = require("../models/Spot");
+const { body, validationResult } = require("express-validator");
 const isAuthenticated = (req, res, next) => {
   console.log("Session:", req.session);
   if (!req.session.userId) {
@@ -34,9 +35,22 @@ router.get("/:id", async (req, res) => {
   }
 });
 
+const spotValidation = [
+  body("title").trim().escape().notEmpty().withMessage("Title is required"),
+  body("description").trim().escape().optional(),
+  body("category").trim().isIn(["food", "study", "sightseeing", "other"]),
+  body("lat").isFloat({ min: -90, max: 90 }).withMessage("Invalid latitude"),
+  body("lng").isFloat({ min: -180, max: 180 }).withMessage("Invalid longitude"),
+];
+
 router.post("/", isAuthenticated, async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
   try {
-    const { title, description, category, photos, tags, lat, lng, rating } = req.body;
+    const { title, description, category, photos, tags, lat, lng, rating } =
+      req.body;
     const spot = await Spot.create({
       title,
       description,
@@ -74,7 +88,7 @@ router.put("/:id", isAuthenticated, async (req, res) => {
     spot.category = category || spot.category;
     spot.photos = photos || spot.photos;
     spot.tags = tags || spot.tags;
-    if (rating !== undefined){
+    if (rating !== undefined) {
       spot.ratingAvg = rating ? parseFloat(rating) : 0;
       spot.ratingCount = rating ? 1 : 0;
     }
