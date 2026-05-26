@@ -9,6 +9,17 @@ const mapRoutes = require("./routes/map");
 const commentRoutes = require("./routes/comments");
 const spotRoutes = require("./routes/spots");
 const searchRoutes = require("./routes/search");
+const { doubleCsrf } = require("csrf-csrf");
+
+const { generateToken, doubleCsrfProtection } = doubleCsrf({
+  getSecret: (req) => process.env.SESSION_SECRET || "fallback-secret",
+  cookieName: "csrf-token",
+  cookieOptions: {
+    httpOnly: false,
+    sameSite: "strict",
+    secure: process.env.NODE_ENV === "production"
+  }
+});
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -42,6 +53,12 @@ app.use("/api/spots", commentRoutes);
 app.use("/auth", authRoutes);
 app.use("/map", mapRoutes);
 app.use("/api/search", searchRoutes);
+
+app.use(doubleCsrfProtection);
+
+app.get("/api/csrf-token", (req, res) => {
+  res.json({ csrfToken: generateToken(req, res) });
+});
 
 app.get("/api/me", (req, res) => {
   res.json({ userId: req.session.userId || null });

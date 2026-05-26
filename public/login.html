@@ -5,7 +5,8 @@
   </head>
   <body>
     <h1>Login</h1>
-    <form action="/auth/login" method="POST">
+    <form action="/auth/login" method="POST" id="loginForm">
+      <input type="hidden" name="_csrf" id="csrfToken" />
       <input type="email" name="email" placeholder="Email" required /><br />
       <input
         type="password"
@@ -16,5 +17,12 @@
       <button type="submit">Login</button>
     </form>
     <a href="/auth/register">Don't have an account? Register</a>
+    <script>
+      fetch("/api/csrf-token")
+        .then((r) => r.json())
+        .then(({ token }) => {
+          document.getElementById("csrfToken").value = token;
+        });
+    </script>
   </body>
 </html>
