@@ -46,7 +46,7 @@ function getCategoryIcon(category){
 
 async function loadCurrentUser(){
   try{
-    const res = await fetch("/api/me");
+    const res = await fetchWithCsrf("/api/me");
     const data = await res.json();
     currentUserId = data.userId;
   } catch(err) {
@@ -165,7 +165,7 @@ function addSpotMarker(spot){
 
 async function loadSpots() {
   try {
-    const res = await fetch("/api/spots");
+    const res = await fetchWithCsrf("/api/spots");
     if (!res.ok) throw new Error("Failed to load spots");
     const spots = await res.json();
     spots.forEach(addSpotMarker);
@@ -198,7 +198,7 @@ async function submitSpot(lat, lng) {
   errorEl.style.display = "none";
 
   try {
-    const res = await fetch("/api/spots", {
+    const res = await fetchWithCsrf("/api/spots", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ title, description, category, lat, lng, rating: ratingRaw !== "" ? parseFloat(ratingRaw) : null }),
@@ -305,7 +305,7 @@ async function submitEdit(spotId){
   errorEl.style.display = "none";
 
   try {
-    const res = await fetch("/api/spots/" + spotId, {
+    const res = await fetchWithCsrf("/api/spots/" + spotId, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ title, description, category, rating: ratingRaw !== "" ? parseFloat(ratingRaw) : null }),
@@ -335,7 +335,7 @@ async function deleteSpot(spotId) {
   if (!confirmed) return;
 
   try {
-    const res = await fetch("/api/spots/" + spotId, {
+    const res = await fetchWithCsrf("/api/spots/" + spotId, {
       method: "DELETE",
     });
 
