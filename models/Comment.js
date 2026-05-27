@@ -9,6 +9,12 @@ const CommentSchema = new mongoose.Schema(
       maxlength: 280,
       trim: true,
     },
+    rating: {
+      type: Number,
+      min: 0,
+      max: 5,
+      default: null,
+    },
     author: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

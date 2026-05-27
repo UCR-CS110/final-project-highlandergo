@@ -121,8 +121,240 @@ function buildViewPopup(spot) {
 
       ${reviewHtml}
       ${actionsHtml}
+      <button id="show-more-${spot._id}" class="show-more-btn">Show More</button>
     </div>
   `;
+}
+
+function openReviewSidebar(spotId){
+  const sidebar = document.getElementById("reviews-sidebar");
+  const spot = spotDataMap[spotId];
+
+  sidebar.innerHTML = `
+    <div class="sidebar-header">
+      <h3 class="sidebar-title">${spot.title}</h3>
+      <button class="add-review-btn" id = "add-review-btn"> Add Review </button>
+    </div>
+
+    <div class="sidebar-review-form" id="sidebar-review-form">
+      <label for="sidebar-rating">Your Rating (0-5, optional)</label>
+      <input type="number" id="sidebar-rating" min="0" max="5" step="0.5" placeholder="e.g. 4.5" />
+
+      <label for="sidebar-body">Review <span class="required">*</span></label>
+      <textarea id="sidebar-body" rows="4" placeholder="Share your experience..."></textarea>
+
+      <div id="sidebar-form-error" class="sidebar-form-error"></div>
+
+      <div class="sidebar-form-buttons">
+        <button class="submit-review-btn" id="submit-review-btn">Submit</button>
+        <button class="cancel-review-btn" id="cancel-review-btn">Cancel</button>
+      </div>
+    </div>
+
+    <div class="reviews-list" id="sidebar-reviews-list">
+      <p class="no-reviews-msg">Loading reviews...</p>
+    </div>
+  `;
+
+  sidebar.spotId = spotId;
+  sidebar.classList.remove("hidden");
+
+  attachSidebarListeners(spotId);
+  loadSidebarReviews(spotId);
+}
+
+function buildReviewRow(username, rating, body, date, commentId, isOwner){
+  let ratingHtml = "";
+  if(rating !== null && rating !== undefined){
+    ratingHtml = `<div class="review-rating"> &#11088; ${parseFloat(rating).toFixed(1)}</div>`;
+  }
+
+  let bodyHtml = "";
+  if(body != ""){
+    bodyHtml = `<div class="review-body"> ${body} </div>`;
+  }
+
+  let formatDate = "";
+  if(date){
+    formatDate = new Date(date).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
+  }
+
+  let actionsHtml = "";
+  if(isOwner && commentId){
+    actionsHtml = `
+      <div class="review-actions">
+        <button id="delete-comment-${commentId}" class="review-delete-btn"> Delete </button>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="review-row">
+      <div class="review-author-line">
+        <span class="review-username"> ${username} </span>
+        <span class="review-date">${formatDate}</span>
+      </div>
+
+      ${ratingHtml}
+      ${bodyHtml}
+      ${actionsHtml}
+    </div>
+  `;
+}
+
+async function loadSidebarReviews(spotId){
+  const listEl = document.getElementById("sidebar-reviews-list");
+  if(!listEl) return;
+
+  try {
+    const res = await fetch(`/api/spots/${spotId}/comments`);
+    if(!res.ok){
+      throw new Error("Failed to load reviews");
+    }
+
+    const comments = await res.json();
+    const spot = spotDataMap[spotId];
+    
+    let reviewListHtml = "";
+    if(spot.description){
+      reviewListHtml += buildReviewRow(spot.author.username, spot.rating, spot.description, spot.createdAt, null, false);
+    }
+
+    comments.forEach(comment => {
+      const isOwner = !!(currentUserId && String(comment.author._id) === String(currentUserId));
+      reviewListHtml += buildReviewRow(comment.author.username, comment.rating, comment.body, comment.createdAt, comment._id, isOwner);
+    });
+
+    listEl.innerHTML = reviewListHtml || `<p class="no-reviews-msg"> No reviews yet. </p>`;
+    attachReviewActionListeners(spotId);
+  } catch(err){
+    listEl.innerHTML = `<p class="no-reviews-msg"> Could not load reviews. </p>`;
+  }
+}
+
+function attachReviewActionListeners(spotId){
+  document.querySelectorAll(".review-delete-btn").forEach(btn => {
+    btn.onclick = () => {
+      const commentId = btn.id.replace("delete-comment-", "");
+      deleteReview(commentId, spotId);
+    };
+  });
+}
+
+async function deleteReview(commentId, spotId){
+  const confirmed = window.confirm("Are you sure you want to delete this review?");
+  if (!confirmed) return;
+
+  try{
+    const res = await fetch(`/api/spots/comments/${commentId}`, {
+      method: "DELETE",
+    });
+
+    if(!res.ok){
+      const data = await res.json();
+      alert(data.error || "Could not delete this review");
+      return;
+    }
+
+    const spotRes = await fetch(`/api/spots/${spotId}`);
+    if(spotRes.ok){
+      const updatedSpot = await spotRes.json();
+      spotDataMap[spotId].ratingAvg = updatedSpot.ratingAvg;
+      spotDataMap[spotId].ratingCount = updatedSpot.ratingCount;
+    }
+
+    loadSidebarReviews(spotId);
+  } catch(err){
+    alert("Could not delete this review.");
+  }
+}
+
+async function submitReview(spotId) {
+  const body = document.getElementById("sidebar-body").value.trim();
+  const ratingRaw = document.getElementById("sidebar-rating").value.trim();
+  const errorEl = document.getElementById("sidebar-form-error");
+
+  errorEl.style.display = "none";
+
+  if (!body) {
+    errorEl.textContent = "Review text is required.";
+    errorEl.style.display = "block";
+    return;
+  }
+
+  try {
+    const res = await fetch(`/api/spots/${spotId}/comments`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        body,
+        rating: ratingRaw !== "" ? parseFloat(ratingRaw) : null,
+      }),
+    });
+
+    if (res.status === 401) {
+      errorEl.innerHTML = 'Please <a href="/auth/login">log in</a> to leave a review.';
+      errorEl.style.display = "block";
+      return;
+    }
+
+    if (!res.ok) {
+      const data = await res.json();
+      errorEl.textContent = data.error || "Something went wrong.";
+      errorEl.style.display = "block";
+      return;
+    }
+
+    const newComment = await res.json();
+
+    if (newComment.rating !== null) {
+      const spot = spotDataMap[spotId];
+      spot.ratingCount += 1;
+      spot.ratingAvg = ((spot.ratingAvg * (spot.ratingCount - 1)) + newComment.rating) / spot.ratingCount;
+    }
+
+    document.getElementById("sidebar-review-form").classList.remove("visible");
+    document.getElementById("sidebar-body").value = "";
+    document.getElementById("sidebar-rating").value = "";
+
+    loadSidebarReviews(spotId);
+
+  } catch (err) {
+    errorEl.textContent = "Network error. Please try again.";
+    errorEl.style.display = "block";
+  }
+}
+
+function attachSidebarListeners(spotId){
+  const addBtn = document.getElementById("add-review-btn");
+  const cancelBtn = document.getElementById("cancel-review-btn");
+  const submitBtn = document.getElementById("submit-review-btn");
+  const form = document.getElementById("sidebar-review-form");
+
+  if(addBtn){
+    addBtn.onclick = () => form.classList.toggle("visible");
+  }
+
+  if(cancelBtn){
+    cancelBtn.onclick = () => {
+      form.classList.remove("visible");
+      document.getElementById("sidebar-form-error").style.display = "none";
+    };
+  }
+
+  if(submitBtn){
+    submitBtn.onclick = () => submitReview(spotId);
+  }
+}
+
+function closeReviewSidebar(){
+  const sidebar = document.getElementById("reviews-sidebar");
+  sidebar.classList.add("hidden");
+  sidebar.dataset.spotId = "";
 }
 
 function attachViewListeners(spotId) {
@@ -140,6 +372,15 @@ function attachViewListeners(spotId) {
     deleteBtn.onclick = (e) => {
       e.stopPropagation();
       deleteSpot(spotId);
+    };
+  }
+
+  const showMoreBtn = document.getElementById("show-more-" + spotId);
+    if (showMoreBtn) {
+      showMoreBtn.onclick = (e) => {
+      e.stopPropagation();
+      map.closePopup();         
+      openReviewSidebar(spotId);
     };
   }
 }
@@ -356,6 +597,12 @@ async function deleteSpot(spotId) {
 }
 
 map.on("click", (e) => {
+  const sidebar = document.getElementById("reviews-sidebar");
+  if(!sidebar.classList.contains("hidden")){
+    closeReviewSidebar();
+    return;
+  }
+
   if(e.originalEvent.target.closest(".leaflet-popup")) return;
 
   const { lat, lng } = e.latlng;

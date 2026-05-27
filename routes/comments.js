@@ -32,13 +32,28 @@ router.post("/:spotId/comments", isAuthenticated, async (req, res) => {
     });
     if (!spot) return res.status(404).json({ error: "Spot not found" });
 
-    const { body } = req.body;
+    const { body, rating } = req.body;
     if (!body || body.trim().length === 0) {
       return res.status(400).json({ error: "Comment cannot be empty" });
     }
 
+    let parsedRating = null;
+    if(rating !== undefined && rating !== null && rating !== ""){
+      parsedRating = parseFloat(rating);
+      if(isNaN(parsedRating) || parsedRating < 0 || parsedRating > 5){
+        return res.status(400).json({ error: "Rating must be between 0 and 5"});
+      }
+    }
+
+    if(parsedRating !== null){
+      spot.ratingCount += 1;
+      spot.ratingAvg = ((spot.ratingAvg * (spot.ratingCount - 1)) + parsedRating) / spot.ratingCount;
+      await spot.save();
+    }
+
     const comment = await Comment.create({
       body,
+      rating: parsedRating,
       author: req.session.userId,
       spot: req.params.spotId,
     });
@@ -69,6 +84,21 @@ router.delete("/comments/:id", isAuthenticated, async (req, res) => {
 
     comment.isDeleted = true;
     await comment.save();
+
+    if(comment.rating !== null){
+      const spot = await Spot.findById(comment.spot);
+      if(spot){
+        if(spot.ratingCount <= 1){
+          spot.ratingAvg = 0;
+          spot.ratingCount = 0;
+        } else{
+          spot.ratingAvg = ((spot.ratingAvg * spot.ratingCount) - comment.rating) / (spot.ratingCount - 1);
+          spot.ratingCount -= 1;
+        }
+        await spot.save();
+      }
+    }
+
     res.json({ message: "Comment deleted successfully" });
   } catch (err) {
     res.status(500).json({ error: err.message });
