@@ -6,7 +6,7 @@ const map = L.map("map", { zoomControl: true }).setView(
 L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
   maxZoom: 20,
   attribution:
-    '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> | <a href="https://www.flaticon.com/free-icons/restaurant" title="restaurant icons"> Food icon created by Setiawanap</a> | <a href="https://www.flaticon.com/free-icons/library" title="library icons">Study icons created by Fahrul Oktaviana</a> | <a href="https://www.flaticon.com/free-icons/pin" title="pin icons">Other pin created by Freepik</a>',
+    '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 }).addTo(map);
 
 let currentUserId = null;
@@ -14,24 +14,24 @@ const markerMap = {};
 const spotDataMap = {};
 
 var foodIcon = L.icon({
-  iconUrl: "/mapPins/restaurant.png",
-  iconSize: [40, 40],
-  iconAnchor: [16, 32],
-  popupAnchor: [0, -32]
+  iconUrl: "/mapPins/foodPin.png",
+  iconSize: [45, 45],
+  iconAnchor: [22.5, 45],
+  popupAnchor: [0, -45]
 });
 
 var studyIcon = L.icon({
-  iconUrl: "/mapPins/library.png",
-  iconSize: [40, 40],
-  iconAnchor: [16, 32],
-  popupAnchor: [0, -32]
+  iconUrl: "/mapPins/studyPin.png",
+  iconSize: [45, 45],
+  iconAnchor: [22.5, 45],
+  popupAnchor: [0, -45]
 });
 
 var otherIcon = L.icon({
-  iconUrl: "/mapPins/maps-and-flags.png",
-  iconSize: [40, 40],
-  iconAnchor: [16, 32],
-  popupAnchor: [0, -32]
+  iconUrl: "/mapPins/otherPin.png",
+  iconSize: [45, 45],
+  iconAnchor: [22.5, 45],
+  popupAnchor: [0, -45]
 });
 
 function getCategoryIcon(category){
@@ -46,7 +46,7 @@ function getCategoryIcon(category){
 
 async function loadCurrentUser(){
   try{
-    const res = await fetchWithCsrf("/api/me");
+    const res = await fetch("/api/me");
     const data = await res.json();
     currentUserId = data.userId;
   } catch(err) {
@@ -406,7 +406,7 @@ function addSpotMarker(spot){
 
 async function loadSpots() {
   try {
-    const res = await fetchWithCsrf("/api/spots");
+    const res = await fetch("/api/spots");
     if (!res.ok) throw new Error("Failed to load spots");
     const spots = await res.json();
     spots.forEach(addSpotMarker);
@@ -439,7 +439,7 @@ async function submitSpot(lat, lng) {
   errorEl.style.display = "none";
 
   try {
-    const res = await fetchWithCsrf("/api/spots", {
+    const res = await fetch("/api/spots", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ title, description, category, lat, lng, rating: ratingRaw !== "" ? parseFloat(ratingRaw) : null }),
@@ -546,7 +546,7 @@ async function submitEdit(spotId){
   errorEl.style.display = "none";
 
   try {
-    const res = await fetchWithCsrf("/api/spots/" + spotId, {
+    const res = await fetch("/api/spots/" + spotId, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ title, description, category, rating: ratingRaw !== "" ? parseFloat(ratingRaw) : null }),
@@ -576,7 +576,7 @@ async function deleteSpot(spotId) {
   if (!confirmed) return;
 
   try {
-    const res = await fetchWithCsrf("/api/spots/" + spotId, {
+    const res = await fetch("/api/spots/" + spotId, {
       method: "DELETE",
     });
 
