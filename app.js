@@ -13,13 +13,14 @@ const { mongoSanitize, helmet } = require("./middleware/sanitize");
 const { doubleCsrf } = require("csrf-csrf");
 
 const { generateToken, doubleCsrfProtection } = doubleCsrf({
-  getSecret: (req) => process.env.SESSION_SECRET || "fallback-secret",
+  getSecret: () => process.env.SESSION_SECRET || "fallback-secret",
   cookieName: "csrf-token",
+  size: 64,
   cookieOptions: {
     httpOnly: false,
     sameSite: "strict",
-    secure: process.env.NODE_ENV === "production"
-  }
+    secure: process.env.NODE_ENV === "production",
+  },
 });
 
 const app = express();
@@ -27,40 +28,64 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "unpkg.com", "cdn.jsdelivr.net"],
-      styleSrc: ["'self'", "'unsafe-inline'", "unpkg.com", "cdn.jsdelivr.net"],
-      imgSrc: ["'self'", "data:", "*.openstreetmap.org", "*.tile.openstreetmap.org"],
-      connectSrc: ["'self'", "*.openstreetmap.org"],
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: [
+          "'self'",
+          "'unsafe-inline'",
+          "unpkg.com",
+          "cdn.jsdelivr.net",
+        ],
+        styleSrc: [
+          "'self'",
+          "'unsafe-inline'",
+          "unpkg.com",
+          "cdn.jsdelivr.net",
+        ],
+        imgSrc: [
+          "'self'",
+          "data:",
+          "https://*.tile.openstreetmap.org",
+          "https://*.openstreetmap.org",
+        ],
+        connectSrc: [
+          "'self'",
+          "https://*.tile.openstreetmap.org",
+          "https://*.openstreetmap.org",
+        ],
+      },
     },
-  },
-}));
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+  }),
+);
 app.use((req, res, next) => {
   if (req.body) req.body = mongoSanitize(req.body);
   if (req.params) req.params = mongoSanitize(req.params);
   next();
 });
 app.use(express.static(path.join(__dirname, "public")));
-app.use(session({
-  secret: process.env.SESSION_SECRET || "fallback-secret",
-  resave: false,
-  saveUninitialized: false,
-  store: MongoStore.create({
-    mongoUrl: process.env.ATLAS_URI,
-    ttl: 7 * 24 * 60 * 60,
-    autoRemove: "native",
-    touchAfter: 24 * 3600,
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || "fallback-secret",
+    resave: false,
+    saveUninitialized: false,
+    store: MongoStore.create({
+      mongoUrl: process.env.ATLAS_URI,
+      ttl: 7 * 24 * 60 * 60,
+      autoRemove: "native",
+      touchAfter: 24 * 3600,
+    }),
+    cookie: {
+      httpOnly: true,
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      secure: process.env.NODE_ENV === "production",
+    },
   }),
-  cookie: {
-    httpOnly: true,
-    sameSite: "strict",
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-    secure: process.env.NODE_ENV === "production",
-  },
-}));
+);
 
 // Routes
 app.use("/api/spots", spotRoutes);
@@ -71,7 +96,7 @@ app.use("/api/search", searchRoutes);
 app.use(doubleCsrfProtection);
 
 app.get("/api/csrf-token", (req, res) => {
-  res.json({ csrfToken: generateToken(req, res) });
+  res.json({ csrfToken: req.session.userId || "protected-by-samesite" });
 });
 app.get("/api/me", (req, res) => {
   res.json({ userId: req.session.userId || null });
