@@ -9,10 +9,13 @@ const mapRoutes = require("./routes/map");
 const commentRoutes = require("./routes/comments");
 const spotRoutes = require("./routes/spots");
 const searchRoutes = require("./routes/search");
+const uploadRoutes = require("./routes/upload");
+const cookieParser = require("cookie-parser");
 const { doubleCsrf } = require("csrf-csrf");
 
-const { generateToken, doubleCsrfProtection } = doubleCsrf({
+const { generateCsrfToken, doubleCsrfProtection } = doubleCsrf({
   getSecret: (req) => process.env.SESSION_SECRET || "fallback-secret",
+  getSessionIdentifier: (req) => req.session.id || req.ip,
   cookieName: "csrf-token",
   cookieOptions: {
     httpOnly: false,
@@ -26,6 +29,7 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 const { mongoSanitize, helmet } = require("./middleware/sanitize");
 app.use(
   helmet({
@@ -49,6 +53,7 @@ app.use(
           "data:",
           "*.openstreetmap.org",
           "*.tile.openstreetmap.org",
+          "res.cloudinary.com",
         ],
         connectSrc: ["'self'", "*.openstreetmap.org"],
       },
@@ -87,11 +92,12 @@ app.use("/api/spots", commentRoutes);
 app.use("/auth", authRoutes);
 app.use("/map", mapRoutes);
 app.use("/api/search", searchRoutes);
+app.use("/api/upload", uploadRoutes);
 
 app.use(doubleCsrfProtection);
 
 app.get("/api/csrf-token", (req, res) => {
-  res.json({ csrfToken: generateToken(req, res) });
+  res.json({ token: generateCsrfToken(req, res) });
 });
 
 app.get("/api/me", (req, res) => {
