@@ -1,8 +1,32 @@
+// routes/auth.js
 const express = require("express");
 const router = express.Router();
 const User = require("../models/User");
 const bcrypt = require("bcrypt");
-const axios = require("axios");
+const { body, validationResult } = require("express-validator");
+
+const registrationValidation = [
+  body("username")
+    .trim()
+    .escape()
+    .notEmpty()
+    .withMessage("Username is required")
+    .isLength({ min: 3, max: 30 })
+    .withMessage("Username must be between 3 and 30 characters"),
+  body("email")
+    .trim()
+    .normalizeEmail()
+    .isEmail()
+    .withMessage("Valid email is required"),
+  body("password")
+    .isLength({ min: 6 })
+    .withMessage("Password must be at least 6 characters long"),
+];
+
+const loginValidation = [
+  body("email").trim().normalizeEmail().isEmail(),
+  body("password").notEmpty(),
+];
 
 // User registation
 router.get("/register", (req, res) => {
@@ -10,6 +34,10 @@ router.get("/register", (req, res) => {
 });
 
 router.post("/register", async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
   try {
     const { username, email, password } = req.body;
 
@@ -59,7 +87,7 @@ router.post("/login", async (req, res) => {
     res.redirect("/");
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Server error during lofin" });
+    res.status(500).json({ error: "Server error during login" });
   }
 });
 

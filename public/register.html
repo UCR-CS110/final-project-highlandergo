@@ -1,11 +1,12 @@
 <!doctype html>
 <html>
   <head>
-    <title>Registraion - Highlander GO!</title>
+    <title>Registration - Highlander GO!</title>
   </head>
   <body>
     <h1>Register</h1>
-    <form action="/auth/register" method="POST">
+    <form action="/auth/register" method="POST" id="registerForm">
+      <input type="hidden" name="_csrf" id="csrfToken" />
       <input
         type="text"
         name="username"
@@ -22,5 +23,13 @@
       <button type="submit">Register</button>
     </form>
     <a href="/auth/login">Already have an account? Log in</a>
+    <script>
+      // Inject CSRF token into form before submit
+      fetch("/api/csrf-token")
+        .then((r) => r.json())
+        .then(({ token }) => {
+          document.getElementById("csrfToken").value = token;
+        });
+    </script>
   </body>
 </html>
