@@ -32,7 +32,7 @@ router.post("/:spotId/comments", isAuthenticated, async (req, res) => {
     });
     if (!spot) return res.status(404).json({ error: "Spot not found" });
 
-    const { body, rating } = req.body;
+    const { body, rating, photos } = req.body;
     if (!body || body.trim().length === 0) {
       return res.status(400).json({ error: "Comment cannot be empty" });
     }
@@ -56,6 +56,7 @@ router.post("/:spotId/comments", isAuthenticated, async (req, res) => {
       rating: parsedRating,
       author: req.session.userId,
       spot: req.params.spotId,
+      photos: Array.isArray(photos) ? photos : []
     });
 
     await comment.populate("author", "username avatar");

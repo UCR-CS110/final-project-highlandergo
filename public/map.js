@@ -71,6 +71,9 @@ function buildCreateForm() {
       <label for="spot-description">Description / Review</label>
       <textarea id="spot-description" rows="3"></textarea>
 
+      <label for="spot-photos"> Photos (optional, up to 4)</label>
+      <input type="file" id="spot-photos" accept="image/*" multiple />
+
       <label for="spot-category">Category</label>
       <select id="spot-category">
         <option value="food">Food</option>
@@ -116,7 +119,10 @@ function buildViewPopup(spot) {
 
   return `
     <div class="spot-popup">
-      <h3 class="spot-title">${spot.title}</h3>
+      <div class="popup-header">
+        <h3 class="spot-title">${spot.title}</h3>
+        <button id="new-review-${spot._id}" class="new-review-btn">Add</button>
+      </div>
       <div class="spot-rating">${ratingDisplay}</div>
       <span class="spot-category ${spot.category}">${spot.category}</span>
 
@@ -144,6 +150,9 @@ function openReviewSidebar(spotId) {
       <label for="sidebar-body">Review <span class="required">*</span></label>
       <textarea id="sidebar-body" rows="4" placeholder="Share your experience..."></textarea>
 
+      <label for="sidebar-photos">Photos (optional, up to 4)</label>
+      <input type="file" id="sidebar-photos" accept="image/*" multiple />
+
       <div id="sidebar-form-error" class="sidebar-form-error"></div>
 
       <div class="sidebar-form-buttons">
@@ -164,7 +173,7 @@ function openReviewSidebar(spotId) {
   loadSidebarReviews(spotId);
 }
 
-function buildReviewRow(username, rating, body, date, commentId, isOwner) {
+function buildReviewRow(username, rating, body, date, commentId, isOwner, photos){
   let ratingHtml = "";
   if (rating !== null && rating !== undefined) {
     ratingHtml = `<div class="review-rating"> &#11088; ${parseFloat(rating).toFixed(1)}</div>`;
@@ -182,6 +191,18 @@ function buildReviewRow(username, rating, body, date, commentId, isOwner) {
       month: "2-digit",
       day: "2-digit",
     });
+  }
+
+  let photosHtml = "";
+  if(photos && photos.length > 0){
+    const imgTags = photos.map(url => `<img src="${url}" class="review-photo" alt="review photo" />`).join("");
+    photosHtml = `<div class="review-photos">${imgTags}</div>`;
+  }
+
+  let photosHtml = "";
+  if(photos && photos.length > 0){
+    const imgTags = photos.map(url => `<img src="${url}" class="review-photo" alt="review photo" />`).join("");
+    photosHtml = `<div class="review-photos">${imgTags}</div>`;
   }
 
   let actionsHtml = "";
@@ -202,6 +223,7 @@ function buildReviewRow(username, rating, body, date, commentId, isOwner) {
 
       ${ratingHtml}
       ${bodyHtml}
+      ${photosHtml}
       ${actionsHtml}
     </div>
   `;
@@ -243,6 +265,7 @@ async function loadSidebarReviews(spotId) {
         comment.createdAt,
         comment._id,
         isOwner,
+        comment.photos
       );
     });
 
@@ -297,6 +320,7 @@ async function submitReview(spotId) {
   const body = document.getElementById("sidebar-body").value.trim();
   const ratingRaw = document.getElementById("sidebar-rating").value.trim();
   const errorEl = document.getElementById("sidebar-form-error");
+  const photoFiles = document.getElementById("sidebar-photos").files;
 
   errorEl.style.display = "none";
 
@@ -307,12 +331,36 @@ async function submitReview(spotId) {
   }
 
   try {
+    let photoUrls = [];
+    if(photoFiles && photoFiles.length > 0){
+      const formData = new FormData();
+      Array.from(photoFiles).forEach(f => formData.append("photos", f));
+
+      const {token} = await fetch("/api/csrf-token").then(r => r.json());
+      const uploadRes = await fetch("/api/upload", {
+        method: "POST",
+        credentials: "include",
+        headers: { "x-csrf-token": token },
+        body: formData,
+      });
+
+      if(!uploadRes.ok){
+        errorEl.textContent = "Image upload failed. Please try again.";
+        errorEl.style.display = "block";
+        return;
+      }
+
+      const uploadData = await uploadRes.json();
+      photoUrls = uploadData.urls;
+    }
+
     const res = await fetch(`/api/spots/${spotId}/comments`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         body,
         rating: ratingRaw !== "" ? parseFloat(ratingRaw) : null,
+        photos: photoUrls,
       }),
     });
 
@@ -343,6 +391,7 @@ async function submitReview(spotId) {
     document.getElementById("sidebar-review-form").classList.remove("visible");
     document.getElementById("sidebar-body").value = "";
     document.getElementById("sidebar-rating").value = "";
+    document.getElementById("sidebar-photos").value = "";
 
     loadSidebarReviews(spotId);
   } catch (err) {
@@ -365,6 +414,7 @@ function attachSidebarListeners(spotId) {
     cancelBtn.onclick = () => {
       form.classList.remove("visible");
       document.getElementById("sidebar-form-error").style.display = "none";
+      document.getElementById("sidebar-photos").value = "";
     };
   }
 
@@ -383,14 +433,14 @@ function attachViewListeners(spotId) {
   const editBtn = document.getElementById("edit-spot-" + spotId);
   const deleteBtn = document.getElementById("delete-spot-" + spotId);
 
-  if (editBtn) {
+  if(editBtn){
     editBtn.onclick = (e) => {
       e.stopPropagation();
       openEditForm(spotId);
     };
   }
 
-  if (deleteBtn) {
+  if(deleteBtn){
     deleteBtn.onclick = (e) => {
       e.stopPropagation();
       deleteSpot(spotId);
@@ -398,11 +448,21 @@ function attachViewListeners(spotId) {
   }
 
   const showMoreBtn = document.getElementById("show-more-" + spotId);
-  if (showMoreBtn) {
-    showMoreBtn.onclick = (e) => {
+    if(showMoreBtn){
+      showMoreBtn.onclick = (e) => {
+        e.stopPropagation();
+        map.closePopup();         
+        openReviewSidebar(spotId);
+      };
+    }
+
+  const newReviewBtn = document.getElementById("new-review-" + spotId);
+  if(newReviewBtn){
+    newReviewBtn.onclick = (e) => {
       e.stopPropagation();
       map.closePopup();
       openReviewSidebar(spotId);
+      document.getElementById("sidebar-review-form").classList.add("visible");
     };
   }
 }
@@ -445,6 +505,7 @@ async function submitSpot(lat, lng) {
   const category = document.getElementById("spot-category").value;
   const errorEl = document.getElementById("create-error");
   const ratingRaw = document.getElementById("spot-rating").value.trim();
+  const photoFiles = document.getElementById("spot-photos").files;
 
   if (ratingRaw !== "") {
     const ratingVal = parseFloat(ratingRaw);
@@ -463,6 +524,29 @@ async function submitSpot(lat, lng) {
   errorEl.style.display = "none";
 
   try {
+    let photoUrls = [];
+    if(photoFiles && photoFiles.length > 0){
+      const formData = new FormData();
+      Array.from(photoFiles).forEach(f => formData.append("photos", f));
+
+      const {token} = await fetch("/api/csrf-token").then(r => r.json());
+      const uploadRes = await fetch("/api/upload", {
+        method: "POST",
+        credentials: "include",
+        headers: { "x-csrf-token": token },
+        body: formData,
+      });
+
+      if(!uploadRes.ok){
+        errorEl.textContent = "Image upload failed. Please try again.";
+        errorEl.style.display = "block";
+        return;
+      }
+
+      const uploadData = await uploadRes.json();
+      photoUrls = uploadData.urls;
+    }
+
     const res = await fetchWithCsrf("/api/spots", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -491,6 +575,19 @@ async function submitSpot(lat, lng) {
     }
 
     const newSpot = await res.json();
+
+    if(description || photoUrls.length > 0 || ratingRaw !== ""){
+      await fetchWithCsrf(`/api/spots/${newSpot._id}/comments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          body: description || "(no description)",
+          rating: ratingRaw !== "" ? parseFloat(ratingRaw) : null,
+          photos: photoUrls,
+        }),
+      });
+    }
+
     newSpot.author = { _id: currentUserId };
     map.closePopup();
     addSpotMarker(newSpot);
