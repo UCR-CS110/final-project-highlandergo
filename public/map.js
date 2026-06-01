@@ -199,12 +199,6 @@ function buildReviewRow(username, rating, body, date, commentId, isOwner, photos
     photosHtml = `<div class="review-photos">${imgTags}</div>`;
   }
 
-  let photosHtml = "";
-  if(photos && photos.length > 0){
-    const imgTags = photos.map(url => `<img src="${url}" class="review-photo" alt="review photo" />`).join("");
-    photosHtml = `<div class="review-photos">${imgTags}</div>`;
-  }
-
   let actionsHtml = "";
   if (isOwner && commentId) {
     actionsHtml = `

@@ -16,7 +16,7 @@ const { doubleCsrf } = require("csrf-csrf");
 
 const { generateCsrfToken, doubleCsrfProtection } = doubleCsrf({
   getSecret: () => process.env.SESSION_SECRET || "fallback-secret",
-  // getSessionIdentifier: (req) => req.session.id || req.ip,
+  getSessionIdentifier: (req) => req.session.id || req.ip,
   cookieName: "csrf-token",
   size: 64,
   cookieOptions: {
@@ -32,7 +32,6 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-//const { mongoSanitize, helmet } = require("./middleware/sanitize");
 app.use(
   helmet({
     contentSecurityPolicy: {
@@ -53,8 +52,6 @@ app.use(
         imgSrc: [
           "'self'",
           "data:",
-          // "*.openstreetmap.org",
-          // "*.tile.openstreetmap.org",
           "https://*.tile.openstreetmap.org",
           "https://*.openstreetmap.org",
           "res.cloudinary.com",
@@ -102,12 +99,14 @@ app.use("/auth", authRoutes);
 app.use("/map", mapRoutes);
 app.use("/api/search", searchRoutes);
 app.use("/api/upload", uploadRoutes);
-app.use(doubleCsrfProtection);
+
 
 app.get("/api/csrf-token", (req, res) => {
   res.json({ token: generateCsrfToken(req, res) });
-  // res.json({ csrfToken: req.session.userId || "protected-by-samesite" });
 });
+
+app.use(doubleCsrfProtection);
+
 app.get("/api/me", (req, res) => {
   res.json({ userId: req.session.userId || null });
 });
