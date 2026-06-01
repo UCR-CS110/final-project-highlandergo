@@ -9,6 +9,7 @@ const mapRoutes = require("./routes/map");
 const commentRoutes = require("./routes/comments");
 const spotRoutes = require("./routes/spots");
 const searchRoutes = require("./routes/search");
+const profileRoutes = require('./routes/profile');
 const { doubleCsrf } = require("csrf-csrf");
 
 const { generateToken, doubleCsrfProtection } = doubleCsrf({
@@ -49,6 +50,8 @@ app.use(
           "data:",
           "*.openstreetmap.org",
           "*.tile.openstreetmap.org",
+          "lh3.googleusercontent.com",
+          "https:",
         ],
         connectSrc: ["'self'", "*.openstreetmap.org"],
       },
@@ -87,6 +90,7 @@ app.use("/api/spots", commentRoutes);
 app.use("/auth", authRoutes);
 app.use("/map", mapRoutes);
 app.use("/api/search", searchRoutes);
+app.use("/api", profileRoutes);
 
 app.use(doubleCsrfProtection);
 
