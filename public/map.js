@@ -237,16 +237,6 @@ async function loadSidebarReviews(spotId) {
     const spot = spotDataMap[spotId];
 
     let reviewListHtml = "";
-    if (spot.description) {
-      reviewListHtml += buildReviewRow(
-        spot.author.username,
-        spot.rating,
-        spot.description,
-        spot.createdAt,
-        null,
-        false,
-      );
-    }
 
     comments.forEach((comment) => {
       const isOwner = !!(
