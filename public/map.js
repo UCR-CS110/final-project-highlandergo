@@ -13,6 +13,19 @@ L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
 let currentUserId = null;
 const markerMap = {};
 const spotDataMap = {};
+const activeCategories = new Set(["food", "study", "other"]);
+
+function applyFilter() {
+  Object.keys(markerMap).forEach(spotId => {
+    const marker = markerMap[spotId];
+    const spot = spotDataMap[spotId];
+    if (activeCategories.has(spot.category)) {
+      if (!map.hasLayer(marker)) marker.addTo(map);
+    } else {
+      if (map.hasLayer(marker)) marker.remove();
+    }
+  });
+}
 
 var foodIcon = L.icon({
   iconUrl: "/mapPins/foodPin.png",
@@ -457,7 +470,11 @@ function addSpotMarker(spot) {
   const [lng, lat] = spot.location.coordinates;
   const marker = L.marker([lat, lng], {
     icon: getCategoryIcon(spot.category),
-  }).addTo(map);
+  });
+
+  if(activeCategories.has(spot.category)){
+    marker.addTo(map);
+  }
 
   markerMap[spot._id] = marker;
 
@@ -742,4 +759,18 @@ map.on("click", (e) => {
 
 loadCurrentUser().then(() => {
   loadSpots();
+});
+
+document.querySelectorAll(".filter-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const category = btn.dataset.category;
+    if (activeCategories.has(category)) {
+      activeCategories.delete(category);
+      btn.classList.remove("active");
+    } else {
+      activeCategories.add(category);
+      btn.classList.add("active");
+    }
+    applyFilter();
+  });
 });
