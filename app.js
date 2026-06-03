@@ -9,6 +9,7 @@ const mapRoutes = require("./routes/map");
 const commentRoutes = require("./routes/comments");
 const spotRoutes = require("./routes/spots");
 const searchRoutes = require("./routes/search");
+const profileRoutes = require('./routes/profile');
 const uploadRoutes = require("./routes/upload");
 const cookieParser = require("cookie-parser");
 const { mongoSanitize, helmet } = require("./middleware/sanitize");
@@ -52,6 +53,8 @@ app.use(
         imgSrc: [
           "'self'",
           "data:",
+          "lh3.googleusercontent.com",
+          "https:",
           "https://*.tile.openstreetmap.org",
           "https://*.openstreetmap.org",
           "res.cloudinary.com",
@@ -98,6 +101,7 @@ app.use("/api/spots", commentRoutes);
 app.use("/auth", authRoutes);
 app.use("/map", mapRoutes);
 app.use("/api/search", searchRoutes);
+app.use("/api", profileRoutes);
 app.use("/api/upload", uploadRoutes);
 
 app.get("/api/csrf-token", (req, res) => {
