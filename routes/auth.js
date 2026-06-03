@@ -84,7 +84,7 @@ router.post("/login", async (req, res) => {
     }
     req.session.userId = user._id;
     req.session.role = user.role;
-    res.redirect("/");
+    res.redirect("/map");
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Server error during login" });
