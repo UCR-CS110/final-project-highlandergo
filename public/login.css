@@ -1,31 +1,31 @@
 body {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh; 
-    background-color: #003da5;
-    margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #003da5;
+  margin: 0;
 }
 
 .login_panel {
-    display: flex;
-    flex-direction: column;
-    border-radius: 5%;
-    border-color: #ffb71b;
-    background-color: #ffffff;
-    border-style: solid;
-    border-width: 10px;
-    padding: 10px;
-    font-family: Arial, sans-serif;
-    max-width: 200px;
-    min-height: 300px;
-    gap: 10px;
+  display: flex;
+  flex-direction: column;
+  border-radius: 5%;
+  border-color: #ffb71b;
+  background-color: #ffffff;
+  border-style: solid;
+  border-width: 10px;
+  padding: 10px;
+  font-family: Arial, sans-serif;
+  max-width: 200px;
+  min-height: 300px;
+  gap: 10px;
 }
 
-.login_panel img{
-    display: flex;
-    justify-content: center;
-    align-self: center;
-    height: 30px; 
-    width: auto;
+.login_panel img {
+  display: flex;
+  justify-content: center;
+  align-self: center;
+  height: 30px;
+  width: auto;
 }

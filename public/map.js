@@ -16,7 +16,7 @@ const spotDataMap = {};
 const activeCategories = new Set(["food", "study", "other"]);
 
 function applyFilter() {
-  Object.keys(markerMap).forEach(spotId => {
+  Object.keys(markerMap).forEach((spotId) => {
     const marker = markerMap[spotId];
     const spot = spotDataMap[spotId];
     if (activeCategories.has(spot.category)) {
@@ -186,7 +186,15 @@ function openReviewSidebar(spotId) {
   loadSidebarReviews(spotId);
 }
 
-function buildReviewRow(username, rating, body, date, commentId, isOwner, photos){
+function buildReviewRow(
+  username,
+  rating,
+  body,
+  date,
+  commentId,
+  isOwner,
+  photos,
+) {
   let ratingHtml = "";
   if (rating !== null && rating !== undefined) {
     ratingHtml = `<div class="review-rating"> &#11088; ${parseFloat(rating).toFixed(1)}</div>`;
@@ -207,8 +215,12 @@ function buildReviewRow(username, rating, body, date, commentId, isOwner, photos
   }
 
   let photosHtml = "";
-  if(photos && photos.length > 0){
-    const imgTags = photos.map(url => `<img src="${url}" class="review-photo" alt="review photo" />`).join("");
+  if (photos && photos.length > 0) {
+    const imgTags = photos
+      .map(
+        (url) => `<img src="${url}" class="review-photo" alt="review photo" />`,
+      )
+      .join("");
     photosHtml = `<div class="review-photos">${imgTags}</div>`;
   }
 
@@ -262,7 +274,7 @@ async function loadSidebarReviews(spotId) {
         comment.createdAt,
         comment._id,
         isOwner,
-        comment.photos
+        comment.photos,
       );
     });
 
@@ -329,11 +341,11 @@ async function submitReview(spotId) {
 
   try {
     let photoUrls = [];
-    if(photoFiles && photoFiles.length > 0){
+    if (photoFiles && photoFiles.length > 0) {
       const formData = new FormData();
-      Array.from(photoFiles).forEach(f => formData.append("photos", f));
+      Array.from(photoFiles).forEach((f) => formData.append("photos", f));
 
-      const {token} = await fetch("/api/csrf-token").then(r => r.json());
+      const { token } = await fetch("/api/csrf-token").then((r) => r.json());
       const uploadRes = await fetch("/api/upload", {
         method: "POST",
         credentials: "include",
@@ -341,7 +353,7 @@ async function submitReview(spotId) {
         body: formData,
       });
 
-      if(!uploadRes.ok){
+      if (!uploadRes.ok) {
         errorEl.textContent = "Image upload failed. Please try again.";
         errorEl.style.display = "block";
         return;
@@ -430,14 +442,14 @@ function attachViewListeners(spotId) {
   const editBtn = document.getElementById("edit-spot-" + spotId);
   const deleteBtn = document.getElementById("delete-spot-" + spotId);
 
-  if(editBtn){
+  if (editBtn) {
     editBtn.onclick = (e) => {
       e.stopPropagation();
       openEditForm(spotId);
     };
   }
 
-  if(deleteBtn){
+  if (deleteBtn) {
     deleteBtn.onclick = (e) => {
       e.stopPropagation();
       deleteSpot(spotId);
@@ -445,16 +457,16 @@ function attachViewListeners(spotId) {
   }
 
   const showMoreBtn = document.getElementById("show-more-" + spotId);
-    if(showMoreBtn){
-      showMoreBtn.onclick = (e) => {
-        e.stopPropagation();
-        map.closePopup();         
-        openReviewSidebar(spotId);
-      };
-    }
+  if (showMoreBtn) {
+    showMoreBtn.onclick = (e) => {
+      e.stopPropagation();
+      map.closePopup();
+      openReviewSidebar(spotId);
+    };
+  }
 
   const newReviewBtn = document.getElementById("new-review-" + spotId);
-  if(newReviewBtn){
+  if (newReviewBtn) {
     newReviewBtn.onclick = (e) => {
       e.stopPropagation();
       map.closePopup();
@@ -472,7 +484,7 @@ function addSpotMarker(spot) {
     icon: getCategoryIcon(spot.category),
   });
 
-  if(activeCategories.has(spot.category)){
+  if (activeCategories.has(spot.category)) {
     marker.addTo(map);
   }
 
@@ -526,11 +538,11 @@ async function submitSpot(lat, lng) {
 
   try {
     let photoUrls = [];
-    if(photoFiles && photoFiles.length > 0){
+    if (photoFiles && photoFiles.length > 0) {
       const formData = new FormData();
-      Array.from(photoFiles).forEach(f => formData.append("photos", f));
+      Array.from(photoFiles).forEach((f) => formData.append("photos", f));
 
-      const {token} = await fetch("/api/csrf-token").then(r => r.json());
+      const { token } = await fetch("/api/csrf-token").then((r) => r.json());
       const uploadRes = await fetch("/api/upload", {
         method: "POST",
         credentials: "include",
@@ -538,7 +550,7 @@ async function submitSpot(lat, lng) {
         body: formData,
       });
 
-      if(!uploadRes.ok){
+      if (!uploadRes.ok) {
         errorEl.textContent = "Image upload failed. Please try again.";
         errorEl.style.display = "block";
         return;
@@ -577,7 +589,7 @@ async function submitSpot(lat, lng) {
 
     const newSpot = await res.json();
 
-    if(description || photoUrls.length > 0 || ratingRaw !== ""){
+    if (description || photoUrls.length > 0 || ratingRaw !== "") {
       await fetchWithCsrf(`/api/spots/${newSpot._id}/comments`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -761,7 +773,7 @@ loadCurrentUser().then(() => {
   loadSpots();
 });
 
-document.querySelectorAll(".filter-btn").forEach(btn => {
+document.querySelectorAll(".filter-btn").forEach((btn) => {
   btn.addEventListener("click", () => {
     const category = btn.dataset.category;
     if (activeCategories.has(category)) {

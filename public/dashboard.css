@@ -4,7 +4,8 @@
   box-sizing: border-box;
 }
 
-html, body {
+html,
+body {
   height: 100%;
   overflow: hidden;
   font-family: sans-serif;
@@ -26,7 +27,7 @@ html, body {
   align-items: center;
   gap: 16px;
   padding: 0 20px;
-  background: #003DA5;
+  background: #003da5;
   color: white;
   z-index: 2000;
   position: relative;
@@ -233,7 +234,7 @@ button.dropdown-item {
   left: 0;
   width: 100%;
   height: 100%;
-  background: #FAF9F6;
+  background: #faf9f6;
   z-index: 1000;
   transition: transform 0.25s ease;
   overflow-y: auto;
@@ -259,7 +260,7 @@ button.dropdown-item {
   background: white;
   border-radius: 8px;
   padding: 16px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
 }
 
 .dash-right-title {
@@ -313,9 +314,18 @@ button.dropdown-item {
   margin-bottom: 8px;
 }
 
-.spot-category.food  { background: #ffe0b2; color: #e65100; }
-.spot-category.study { background: #e3f2fd; color: #1565c0; }
-.spot-category.other { background: #f3e5f5; color: #6a1b9a; }
+.spot-category.food {
+  background: #ffe0b2;
+  color: #e65100;
+}
+.spot-category.study {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+.spot-category.other {
+  background: #f3e5f5;
+  color: #6a1b9a;
+}
 
 .spot-review {
   font-style: italic;
@@ -330,7 +340,7 @@ button.dropdown-item {
   margin-top: 8px;
   width: 100%;
   padding: 8px;
-  background: #FFB81C;
+  background: #ffb81c;
   color: white;
   border: none;
   border-radius: 4px;
@@ -465,6 +475,15 @@ button.dropdown-item {
   opacity: 1;
 }
 
-.filter-btn[data-category="food"]  { background: #ffd7c1; color: #e65100; }
-.filter-btn[data-category="study"] { background: #c9e8fd; color: #1565c0; }
-.filter-btn[data-category="other"] { background: #f4d8f8; color: #6a1b9a; }
+.filter-btn[data-category="food"] {
+  background: #ffd7c1;
+  color: #e65100;
+}
+.filter-btn[data-category="study"] {
+  background: #c9e8fd;
+  color: #1565c0;
+}
+.filter-btn[data-category="other"] {
+  background: #f4d8f8;
+  color: #6a1b9a;
+}

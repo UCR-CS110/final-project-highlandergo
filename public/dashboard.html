@@ -14,11 +14,15 @@
   </head>
   <body>
     <div id="dashboard">
-
       <header id="dash-header">
         <div id="dash-brand">Highlander GO</div>
         <div id="dash-search">
-          <input type="text" id="search-input" placeholder="Search spots…" autocomplete="off"/>
+          <input
+            type="text"
+            id="search-input"
+            placeholder="Search spots…"
+            autocomplete="off"
+          />
           <div id="search-dropdown" class="hidden"></div>
         </div>
 
@@ -26,15 +30,13 @@
           <button id="user-icon-btn">
             <img id="user-avatar-img" src="/img/user.png" alt="User" />
           </button>
-          <div id="user-dropdown" class="hidden">
-          </div>
+          <div id="user-dropdown" class="hidden"></div>
         </div>
       </header>
 
       <nav id="dash-left">
         <ul class="dash-nav-list">
           <li><a href="/map" class="dash-nav-link">Map</a></li>
-          <li><a href="#" class="dash-nav-link">Feed</a></li>
           <li><a href="#" class="dash-nav-link">Feed</a></li>
           <li><a href="#" class="dash-nav-link">Friends</a></li>
           <li><a href="#" class="dash-nav-link">Settings</a></li>
@@ -45,10 +47,10 @@
       <main id="dash-main">
         <div id="dash-map"></div>
         <div id="dash-map-filter">
-            <span class="filter-title">Filter by Category</span>
-            <button class="filter-btn active" data-category="food">Food</button>
-            <button class="filter-btn active" data-category="study">Study</button>
-            <button class="filter-btn active" data-category="other">Other</button>
+          <span class="filter-title">Filter by Category</span>
+          <button class="filter-btn active" data-category="food">Food</button>
+          <button class="filter-btn active" data-category="study">Study</button>
+          <button class="filter-btn active" data-category="other">Other</button>
         </div>
       </main>
 
@@ -61,7 +63,6 @@
           <h3 class="dash-right-title">Friend Activity</h3>
         </div>
       </aside>
-
     </div>
 
     <script

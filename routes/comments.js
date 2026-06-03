@@ -38,16 +38,20 @@ router.post("/:spotId/comments", isAuthenticated, async (req, res) => {
     }
 
     let parsedRating = null;
-    if(rating !== undefined && rating !== null && rating !== ""){
+    if (rating !== undefined && rating !== null && rating !== "") {
       parsedRating = parseFloat(rating);
-      if(isNaN(parsedRating) || parsedRating < 0 || parsedRating > 5){
-        return res.status(400).json({ error: "Rating must be between 0 and 5"});
+      if (isNaN(parsedRating) || parsedRating < 0 || parsedRating > 5) {
+        return res
+          .status(400)
+          .json({ error: "Rating must be between 0 and 5" });
       }
     }
 
-    if(parsedRating !== null){
+    if (parsedRating !== null) {
       spot.ratingCount += 1;
-      spot.ratingAvg = ((spot.ratingAvg * (spot.ratingCount - 1)) + parsedRating) / spot.ratingCount;
+      spot.ratingAvg =
+        (spot.ratingAvg * (spot.ratingCount - 1) + parsedRating) /
+        spot.ratingCount;
       await spot.save();
     }
 
@@ -56,7 +60,7 @@ router.post("/:spotId/comments", isAuthenticated, async (req, res) => {
       rating: parsedRating,
       author: req.session.userId,
       spot: req.params.spotId,
-      photos: Array.isArray(photos) ? photos : []
+      photos: Array.isArray(photos) ? photos : [],
     });
 
     await comment.populate("author", "username avatar");
@@ -86,14 +90,16 @@ router.delete("/comments/:id", isAuthenticated, async (req, res) => {
     comment.isDeleted = true;
     await comment.save();
 
-    if(comment.rating !== null){
+    if (comment.rating !== null) {
       const spot = await Spot.findById(comment.spot);
-      if(spot){
-        if(spot.ratingCount <= 1){
+      if (spot) {
+        if (spot.ratingCount <= 1) {
           spot.ratingAvg = 0;
           spot.ratingCount = 0;
-        } else{
-          spot.ratingAvg = ((spot.ratingAvg * spot.ratingCount) - comment.rating) / (spot.ratingCount - 1);
+        } else {
+          spot.ratingAvg =
+            (spot.ratingAvg * spot.ratingCount - comment.rating) /
+            (spot.ratingCount - 1);
           spot.ratingCount -= 1;
         }
         await spot.save();

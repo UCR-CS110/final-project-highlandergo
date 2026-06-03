@@ -47,9 +47,18 @@ body {
   margin-bottom: 8px;
 }
 
-.spot-category.food        { background: #ffe0b2; color: #e65100; }
-.spot-category.study       { background: #e3f2fd; color: #1565c0; }
-.spot-category.other       { background: #f3e5f5; color: #6a1b9a; }
+.spot-category.food {
+  background: #ffe0b2;
+  color: #e65100;
+}
+.spot-category.study {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+.spot-category.other {
+  background: #f3e5f5;
+  color: #6a1b9a;
+}
 
 .spot-review {
   font-style: italic;
@@ -60,17 +69,20 @@ body {
   padding-left: 8px;
 }
 
-.create-spot-form, .edit-spot-form {
+.create-spot-form,
+.edit-spot-form {
   font-family: sans-serif;
   min-width: 200px;
 }
 
-.create-spot-form h3, .edit-spot-form h3 {
+.create-spot-form h3,
+.edit-spot-form h3 {
   margin: 0 0 10px 0;
   font-size: 1rem;
 }
 
-.create-spot-form label, .edit-spot-form label {
+.create-spot-form label,
+.edit-spot-form label {
   display: block;
   font-size: 0.8rem;
   font-weight: 600;
@@ -86,8 +98,7 @@ body {
 .create-spot-form textarea,
 .create-spot-form select,
 .create-spot-form input[type="number"],
-.edit-spot-form input[type="number"]
-.edit-spot-form input[type="text"],
+.edit-spot-form input[type="number"] .edit-spot-form input[type="text"],
 .edit-spot-form textarea,
 .edit-spot-form select {
   width: 100%;
@@ -99,7 +110,8 @@ body {
   font-family: inherit;
 }
 
-.create-spot-form textarea, .edit-spot-form textarea {
+.create-spot-form textarea,
+.edit-spot-form textarea {
   resize: vertical;
 }
 
@@ -107,7 +119,7 @@ body {
   margin-top: 12px;
   width: 100%;
   padding: 8px;
-  background: #003DA5;
+  background: #003da5;
   color: white;
   border: none;
   border-radius: 4px;
@@ -120,18 +132,22 @@ body {
   background: #517fce;
 }
 
-.spot-actions, .edit-form-buttons {
+.spot-actions,
+.edit-form-buttons {
   display: flex;
   gap: 8px;
   margin-top: 4px;
 }
 
-.btn-edit, .btn-delete, .btn-save, .btn-cancel {
+.btn-edit,
+.btn-delete,
+.btn-save,
+.btn-cancel {
   flex: 1;
   margin-top: 8px;
   width: 50%;
   padding: 8px;
-  background: #003DA5;
+  background: #003da5;
   color: white;
   border: none;
   border-radius: 4px;
@@ -140,7 +156,10 @@ body {
   cursor: pointer;
 }
 
-.btn-edit:hover, .btn-delete:hover, .btn-save:hover, .btn-cancel:hover {
+.btn-edit:hover,
+.btn-delete:hover,
+.btn-save:hover,
+.btn-cancel:hover {
   background: #517fce;
 }
 
@@ -150,7 +169,7 @@ body {
   right: 0;
   width: 30%;
   height: 100%;
-  background: #FAF9F6;
+  background: #faf9f6;
   z-index: 1000;
   transition: transform 0.25s ease;
 }
@@ -164,7 +183,7 @@ body {
   margin-top: 8px;
   width: 100%;
   padding: 8px;
-  background: #FFB81C;
+  background: #ffb81c;
   color: white;
   border: none;
   border-radius: 4px;
@@ -196,7 +215,7 @@ body {
 
 .add-review-btn {
   padding: 6px 12px;
-  background: #003DA5;
+  background: #003da5;
   color: white;
   width: 30%;
   border: none;
@@ -255,7 +274,7 @@ body {
   flex: 1;
   width: 50%;
   padding: 8px;
-  background: #003DA5;
+  background: #003da5;
   color: white;
   border: none;
   border-radius: 4px;
@@ -264,7 +283,8 @@ body {
   cursor: pointer;
 }
 
-.submit-review-btn:hover, .cancel-review-btn:hover {
+.submit-review-btn:hover,
+.cancel-review-btn:hover {
   background: #517fce;
 }
 
@@ -338,7 +358,7 @@ body {
   font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
-  background: #003DA5;
+  background: #003da5;
   color: white;
   width: 15%;
 }
@@ -381,7 +401,7 @@ body {
 .new-review-btn {
   flex-shrink: 0;
   padding: 3px 8px;
-  background: #003DA5;
+  background: #003da5;
   color: white;
   border: none;
   border-radius: 4px;
@@ -432,6 +452,15 @@ body {
   opacity: 1;
 }
 
-.filter-btn[data-category="food"]  { background: #ffd7c1; color: #e65100; }
-.filter-btn[data-category="study"] { background: #c9e8fd; color: #1565c0; }
-.filter-btn[data-category="other"] { background: #f4d8f8; color: #6a1b9a; }
+.filter-btn[data-category="food"] {
+  background: #ffd7c1;
+  color: #e65100;
+}
+.filter-btn[data-category="study"] {
+  background: #c9e8fd;
+  color: #1565c0;
+}
+.filter-btn[data-category="other"] {
+  background: #f4d8f8;
+  color: #6a1b9a;
+}

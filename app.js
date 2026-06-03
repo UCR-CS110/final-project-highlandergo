@@ -100,7 +100,6 @@ app.use("/map", mapRoutes);
 app.use("/api/search", searchRoutes);
 app.use("/api/upload", uploadRoutes);
 
-
 app.get("/api/csrf-token", (req, res) => {
   res.json({ token: generateCsrfToken(req, res) });
 });
