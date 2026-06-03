@@ -10,30 +10,35 @@ const isAuthenticated = (req, res, next) => {
   next();
 };
 
-router.post("/", isAuthenticated, upload.array("photos", 4), async (req, res) => {
-  try {
-    if (!req.files || req.files.length === 0) {
-      return res.json({ urls: [] });
-    }
+router.post(
+  "/",
+  isAuthenticated,
+  upload.array("photos", 4),
+  async (req, res) => {
+    try {
+      if (!req.files || req.files.length === 0) {
+        return res.json({ urls: [] });
+      }
 
-    const uploadPromises = req.files.map((file) => {
-      return new Promise((resolve, reject) => {
-        const stream = cloudinary.uploader.upload_stream(
-          { folder: "highlandergo" },
-          (error, result) => {
-            if (error) reject(error);
-            else resolve(result.secure_url);
-          }
-        );
-        stream.end(file.buffer);
+      const uploadPromises = req.files.map((file) => {
+        return new Promise((resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream(
+            { folder: "highlandergo" },
+            (error, result) => {
+              if (error) reject(error);
+              else resolve(result.secure_url);
+            },
+          );
+          stream.end(file.buffer);
+        });
       });
-    });
 
-    const urls = await Promise.all(uploadPromises);
-    res.json({ urls });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+      const urls = await Promise.all(uploadPromises);
+      res.json({ urls });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  },
+);
 
 module.exports = router;

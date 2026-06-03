@@ -2,7 +2,7 @@
 <html>
   <head>
     <title>Login - Highlander GO!</title>
-    <link rel="stylesheet" href="/login.css">
+    <link rel="stylesheet" href="/login.css" />
   </head>
   <body>
     <div class="login_panel">
@@ -10,20 +10,38 @@
       <form action="/auth/login" method="POST" id="loginForm">
         <input type="hidden" name="_csrf" id="csrfToken" />
         <input type="email" name="email" placeholder="Email" required />
-        <input type="password" name="password" placeholder="Password" required />
+        <input
+          type="password"
+          name="password"
+          placeholder="Password"
+          required
+        />
         <button type="submit">Log in</button>
       </form>
       <a>Don't have an account? <a href="/auth/register">Register</a></a>
-      <div style="display:inline-block">
-        <a href="/auth/google" style="display:inline-flex; border:1px solid; padding:5px; border-color:black; border-radius:15px; align-items:center; gap:8px; text-decoration:none; color:black;">
+      <div style="display: inline-block">
+        <a
+          href="/auth/google"
+          style="
+            display: inline-flex;
+            border: 1px solid;
+            padding: 5px;
+            border-color: black;
+            border-radius: 15px;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            color: black;
+          "
+        >
           Log in with
-          <img src="/img/google.png" alt="login with Google">
+          <img src="/img/google.png" alt="login with Google" />
         </a>
       </div>
     </div>
     <script>
       fetch("/api/csrf-token")
-        .then(r => r.json())
+        .then((r) => r.json())
         .then(({ csrfToken }) => {
           document.getElementById("csrfToken").value = csrfToken;
         });

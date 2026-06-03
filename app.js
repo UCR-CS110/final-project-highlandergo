@@ -104,7 +104,6 @@ app.use("/api/search", searchRoutes);
 app.use("/api", profileRoutes);
 app.use("/api/upload", uploadRoutes);
 
-
 app.get("/api/csrf-token", (req, res) => {
   res.json({ token: generateCsrfToken(req, res) });
 });
@@ -121,7 +120,7 @@ function isLoggedIn(req, res, next) {
 }
 
 app.get("/", (req, res) => {
-  res.send("Highlander GO! is running on localhost:3000");
+  res.sendFile(path.join(__dirname, "public", "dashboard.html"));
 });
 app.get("/map", isLoggedIn, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "map.html"));
