@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Highlander GO</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""
+    />
+    <link rel="stylesheet" href="dashboard.css" />
+  </head>
+  <body>
+    <div id="dashboard">
+
+      <header id="dash-header">
+        <div id="dash-brand">Highlander GO</div>
+        <div id="dash-search">
+          <input type="text" id="search-input" placeholder="Search spots…" autocomplete="off"/>
+          <div id="search-dropdown" class="hidden"></div>
+        </div>
+
+        <div id="dash-user">
+          <button id="user-icon-btn">
+            <img id="user-avatar-img" src="/img/user.png" alt="User" />
+          </button>
+          <div id="user-dropdown" class="hidden">
+          </div>
+        </div>
+      </header>
+
+      <nav id="dash-left">
+        <ul class="dash-nav-list">
+          <li><a href="/map" class="dash-nav-link">Map</a></li>
+          <li><a href="#" class="dash-nav-link">Feed</a></li>
+          <li><a href="#" class="dash-nav-link">Feed</a></li>
+          <li><a href="#" class="dash-nav-link">Friends</a></li>
+          <li><a href="#" class="dash-nav-link">Settings</a></li>
+          <li><a href="/map" class="dash-nav-link">Add New Spot</a></li>
+        </ul>
+      </nav>
+
+      <main id="dash-main">
+        <div id="dash-map"></div>
+        <div id="dash-map-filter">
+            <span class="filter-title">Filter by Category</span>
+            <button class="filter-btn active" data-category="food">Food</button>
+            <button class="filter-btn active" data-category="study">Study</button>
+            <button class="filter-btn active" data-category="other">Other</button>
+        </div>
+      </main>
+
+      <aside id="dash-right">
+        <div id="dash-reviews-sidebar" class="dash-sidebar hidden"></div>
+        <div class="dash-right-section">
+          <h3 class="dash-right-title">Top Rated Spots</h3>
+        </div>
+        <div class="dash-right-section">
+          <h3 class="dash-right-title">Friend Activity</h3>
+        </div>
+      </aside>
+
+    </div>
+
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin=""
+    ></script>
+
+    <script src="dashboard.js"></script>
+  </body>
+</html>
