@@ -91,6 +91,67 @@ router.post("/login", async (req, res) => {
   }
 });
 
+router.get('/test', (req, res) => {
+    res.send('auth router is working');
+});
+
+// redirect to Google
+router.get('/google', (req, res) => {
+    const params = new URLSearchParams({
+        client_id: process.env.GOOGLE_CLIENT_ID,
+        redirect_uri: 'http://localhost:3000/auth/google/callback',
+        response_type: 'code',
+        scope: 'profile email',
+    });
+    res.redirect(`https://accounts.google.com/o/oauth2/v2/auth?${params}`);
+});
+
+// handle callback
+router.get('/google/callback', async (req, res) => {
+    try {
+        const { code } = req.query;
+
+        const tokenRes = await axios.post('https://oauth2.googleapis.com/token', {
+            code,
+            client_id: process.env.GOOGLE_CLIENT_ID,
+            client_secret: process.env.GOOGLE_CLIENT_SECRET,
+            redirect_uri: 'http://localhost:3000/auth/google/callback',
+            grant_type: 'authorization_code',
+        });
+
+        const userRes = await axios.get('https://www.googleapis.com/oauth2/v2/userinfo', {
+            headers: { Authorization: `Bearer ${tokenRes.data.access_token}` }
+        });
+
+        const { id, email, name, picture } = userRes.data;
+
+        let user = await User.findOne({ googleId: id });
+        if (!user) {
+            user = await User.findOne({ email });
+            if (user) {
+                user.googleId = id;
+                user.avatar = user.avatar || picture;
+                await user.save();
+            } else {
+                user = await User.create({
+                    googleId: id,
+                    email,
+                    username: name.replace(/\s+/g, '_').toLowerCase() + '_' + Math.floor(Math.random() * 1000),
+                    avatar: picture,
+                    passwordHash: null,
+                });
+            }
+        }
+
+        req.session.userId = user._id;
+        req.session.role = user.role;
+        res.redirect('/map');
+    } catch (err) {
+        console.error('Google auth error:', err.message);
+        res.redirect('/auth/login');
+    }
+});
+
 // Logout
 router.post("/logout", (req, res) => {
   req.session.destroy(() => {

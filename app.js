@@ -10,16 +10,21 @@ const commentRoutes = require("./routes/comments");
 const spotRoutes = require("./routes/spots");
 const searchRoutes = require("./routes/search");
 const profileRoutes = require('./routes/profile');
+const uploadRoutes = require("./routes/upload");
+const cookieParser = require("cookie-parser");
+const { mongoSanitize, helmet } = require("./middleware/sanitize");
 const { doubleCsrf } = require("csrf-csrf");
 
-const { generateToken, doubleCsrfProtection } = doubleCsrf({
-  getSecret: (req) => process.env.SESSION_SECRET || "fallback-secret",
+const { generateCsrfToken, doubleCsrfProtection } = doubleCsrf({
+  getSecret: () => process.env.SESSION_SECRET || "fallback-secret",
+  getSessionIdentifier: (req) => req.session.id || req.ip,
   cookieName: "csrf-token",
+  size: 64,
   cookieOptions: {
     httpOnly: false,
     sameSite: "strict",
-    secure: process.env.NODE_ENV === "production"
-  }
+    secure: process.env.NODE_ENV === "production",
+  },
 });
 
 const app = express();
@@ -27,7 +32,7 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-const { mongoSanitize, helmet } = require("./middleware/sanitize");
+app.use(cookieParser());
 app.use(
   helmet({
     contentSecurityPolicy: {
@@ -48,14 +53,20 @@ app.use(
         imgSrc: [
           "'self'",
           "data:",
-          "*.openstreetmap.org",
-          "*.tile.openstreetmap.org",
           "lh3.googleusercontent.com",
           "https:",
+          "https://*.tile.openstreetmap.org",
+          "https://*.openstreetmap.org",
+          "res.cloudinary.com",
         ],
-        connectSrc: ["'self'", "*.openstreetmap.org"],
+        connectSrc: [
+          "'self'",
+          "https://*.tile.openstreetmap.org",
+          "https://*.openstreetmap.org",
+        ],
       },
     },
+    crossOriginResourcePolicy: { policy: "cross-origin" },
   }),
 );
 app.use((req, res, next) => {
@@ -64,7 +75,6 @@ app.use((req, res, next) => {
   next();
 });
 app.use(express.static(path.join(__dirname, "public")));
-
 app.use(
   session({
     secret: process.env.SESSION_SECRET || "fallback-secret",
@@ -85,25 +95,36 @@ app.use(
   }),
 );
 
+// Routes
 app.use("/api/spots", spotRoutes);
 app.use("/api/spots", commentRoutes);
 app.use("/auth", authRoutes);
 app.use("/map", mapRoutes);
 app.use("/api/search", searchRoutes);
 app.use("/api", profileRoutes);
+app.use("/api/upload", uploadRoutes);
 
-app.use(doubleCsrfProtection);
 
 app.get("/api/csrf-token", (req, res) => {
-  res.json({ csrfToken: generateToken(req, res) });
+  res.json({ token: generateCsrfToken(req, res) });
 });
+
+app.use(doubleCsrfProtection);
 
 app.get("/api/me", (req, res) => {
   res.json({ userId: req.session.userId || null });
 });
 
+function isLoggedIn(req, res, next) {
+  if (req.session.userId) return next();
+  res.redirect("/auth/login");
+}
+
 app.get("/", (req, res) => {
   res.send("Highlander GO! is running on localhost:3000");
+});
+app.get("/map", isLoggedIn, (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "map.html"));
 });
 
 connectDB().then(() => {

@@ -29,6 +29,10 @@ const CommentSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    photos: {
+      type: [String],
+      default: [],
+    },
   },
   { timestamps: true },
 );

@@ -6,55 +6,69 @@ const map = L.map("map", { zoomControl: true }).setView(
 L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
   maxZoom: 20,
   attribution:
-    '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+  referrerPolicy: "no-referrer-when-downgrade",
 }).addTo(map);
 
 let currentUserId = null;
 const markerMap = {};
 const spotDataMap = {};
+const activeCategories = new Set(["food", "study", "other"]);
+
+function applyFilter() {
+  Object.keys(markerMap).forEach(spotId => {
+    const marker = markerMap[spotId];
+    const spot = spotDataMap[spotId];
+    if (activeCategories.has(spot.category)) {
+      if (!map.hasLayer(marker)) marker.addTo(map);
+    } else {
+      if (map.hasLayer(marker)) marker.remove();
+    }
+  });
+}
 
 var foodIcon = L.icon({
   iconUrl: "/mapPins/foodPin.png",
   iconSize: [45, 45],
   iconAnchor: [22.5, 45],
-  popupAnchor: [0, -45]
+  popupAnchor: [0, -45],
 });
 
 var studyIcon = L.icon({
   iconUrl: "/mapPins/studyPin.png",
   iconSize: [45, 45],
   iconAnchor: [22.5, 45],
-  popupAnchor: [0, -45]
+  popupAnchor: [0, -45],
 });
 
 var otherIcon = L.icon({
   iconUrl: "/mapPins/otherPin.png",
   iconSize: [45, 45],
   iconAnchor: [22.5, 45],
-  popupAnchor: [0, -45]
+  popupAnchor: [0, -45],
 });
 
-function getCategoryIcon(category){
-  if(category === "food"){
+function getCategoryIcon(category) {
+  if (category === "food") {
     return foodIcon;
-  } else if(category === "study"){
+  } else if (category === "study") {
     return studyIcon;
-  } else{
+  } else {
     return otherIcon;
   }
 }
 
-async function loadCurrentUser(){
-  try{
+async function loadCurrentUser() {
+  try {
     const res = await fetchWithCsrf("/api/me");
     const data = await res.json();
     currentUserId = data.userId;
-  } catch(err) {
+  } catch (err) {
     console.error("Could not load current user: ", err);
   }
 }
 
-function buildCreateForm(){
+function buildCreateForm() {
   return `
     <div class="create-spot-form">
       <h3>Add a Spot</h3>
@@ -69,6 +83,9 @@ function buildCreateForm(){
 
       <label for="spot-description">Description / Review</label>
       <textarea id="spot-description" rows="3"></textarea>
+
+      <label for="spot-photos"> Photos (optional, up to 4)</label>
+      <input type="file" id="spot-photos" accept="image/*" multiple />
 
       <label for="spot-category">Category</label>
       <select id="spot-category">
@@ -104,7 +121,7 @@ function buildViewPopup(spot) {
   }
 
   let actionsHtml = "";
-  if(currentUserId && String(spot.author._id) === String(currentUserId)){
+  if (currentUserId && String(spot.author._id) === String(currentUserId)) {
     actionsHtml = `
       <div class="spot-actions">
         <button id="edit-spot-${spot._id}" class="btn-edit">Edit</button>
@@ -115,7 +132,10 @@ function buildViewPopup(spot) {
 
   return `
     <div class="spot-popup">
-      <h3 class="spot-title">${spot.title}</h3>
+      <div class="popup-header">
+        <h3 class="spot-title">${spot.title}</h3>
+        <button id="new-review-${spot._id}" class="new-review-btn">Add</button>
+      </div>
       <div class="spot-rating">${ratingDisplay}</div>
       <span class="spot-category ${spot.category}">${spot.category}</span>
 
@@ -126,7 +146,7 @@ function buildViewPopup(spot) {
   `;
 }
 
-function openReviewSidebar(spotId){
+function openReviewSidebar(spotId) {
   const sidebar = document.getElementById("reviews-sidebar");
   const spot = spotDataMap[spotId];
 
@@ -142,6 +162,9 @@ function openReviewSidebar(spotId){
 
       <label for="sidebar-body">Review <span class="required">*</span></label>
       <textarea id="sidebar-body" rows="4" placeholder="Share your experience..."></textarea>
+
+      <label for="sidebar-photos">Photos (optional, up to 4)</label>
+      <input type="file" id="sidebar-photos" accept="image/*" multiple />
 
       <div id="sidebar-form-error" class="sidebar-form-error"></div>
 
@@ -163,28 +186,34 @@ function openReviewSidebar(spotId){
   loadSidebarReviews(spotId);
 }
 
-function buildReviewRow(username, rating, body, date, commentId, isOwner){
+function buildReviewRow(username, rating, body, date, commentId, isOwner, photos){
   let ratingHtml = "";
-  if(rating !== null && rating !== undefined){
+  if (rating !== null && rating !== undefined) {
     ratingHtml = `<div class="review-rating"> &#11088; ${parseFloat(rating).toFixed(1)}</div>`;
   }
 
   let bodyHtml = "";
-  if(body != ""){
+  if (body != "") {
     bodyHtml = `<div class="review-body"> ${body} </div>`;
   }
 
   let formatDate = "";
-  if(date){
-    formatDate = new Date(date).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit'
+  if (date) {
+    formatDate = new Date(date).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
     });
   }
 
+  let photosHtml = "";
+  if(photos && photos.length > 0){
+    const imgTags = photos.map(url => `<img src="${url}" class="review-photo" alt="review photo" />`).join("");
+    photosHtml = `<div class="review-photos">${imgTags}</div>`;
+  }
+
   let actionsHtml = "";
-  if(isOwner && commentId){
+  if (isOwner && commentId) {
     actionsHtml = `
       <div class="review-actions">
         <button id="delete-comment-${commentId}" class="review-delete-btn"> Delete </button>
@@ -201,43 +230,52 @@ function buildReviewRow(username, rating, body, date, commentId, isOwner){
 
       ${ratingHtml}
       ${bodyHtml}
+      ${photosHtml}
       ${actionsHtml}
     </div>
   `;
 }
 
-async function loadSidebarReviews(spotId){
+async function loadSidebarReviews(spotId) {
   const listEl = document.getElementById("sidebar-reviews-list");
-  if(!listEl) return;
+  if (!listEl) return;
 
   try {
     const res = await fetch(`/api/spots/${spotId}/comments`);
-    if(!res.ok){
+    if (!res.ok) {
       throw new Error("Failed to load reviews");
     }
 
     const comments = await res.json();
     const spot = spotDataMap[spotId];
-    
-    let reviewListHtml = "";
-    if(spot.description){
-      reviewListHtml += buildReviewRow(spot.author.username, spot.rating, spot.description, spot.createdAt, null, false);
-    }
 
-    comments.forEach(comment => {
-      const isOwner = !!(currentUserId && String(comment.author._id) === String(currentUserId));
-      reviewListHtml += buildReviewRow(comment.author.username, comment.rating, comment.body, comment.createdAt, comment._id, isOwner);
+    let reviewListHtml = "";
+
+    comments.forEach((comment) => {
+      const isOwner = !!(
+        currentUserId && String(comment.author._id) === String(currentUserId)
+      );
+      reviewListHtml += buildReviewRow(
+        comment.author.username,
+        comment.rating,
+        comment.body,
+        comment.createdAt,
+        comment._id,
+        isOwner,
+        comment.photos
+      );
     });
 
-    listEl.innerHTML = reviewListHtml || `<p class="no-reviews-msg"> No reviews yet. </p>`;
+    listEl.innerHTML =
+      reviewListHtml || `<p class="no-reviews-msg"> No reviews yet. </p>`;
     attachReviewActionListeners(spotId);
-  } catch(err){
+  } catch (err) {
     listEl.innerHTML = `<p class="no-reviews-msg"> Could not load reviews. </p>`;
   }
 }
 
-function attachReviewActionListeners(spotId){
-  document.querySelectorAll(".review-delete-btn").forEach(btn => {
+function attachReviewActionListeners(spotId) {
+  document.querySelectorAll(".review-delete-btn").forEach((btn) => {
     btn.onclick = () => {
       const commentId = btn.id.replace("delete-comment-", "");
       deleteReview(commentId, spotId);
@@ -245,30 +283,32 @@ function attachReviewActionListeners(spotId){
   });
 }
 
-async function deleteReview(commentId, spotId){
-  const confirmed = window.confirm("Are you sure you want to delete this review?");
+async function deleteReview(commentId, spotId) {
+  const confirmed = window.confirm(
+    "Are you sure you want to delete this review?",
+  );
   if (!confirmed) return;
 
-  try{
+  try {
     const res = await fetch(`/api/spots/comments/${commentId}`, {
       method: "DELETE",
     });
 
-    if(!res.ok){
+    if (!res.ok) {
       const data = await res.json();
       alert(data.error || "Could not delete this review");
       return;
     }
 
     const spotRes = await fetch(`/api/spots/${spotId}`);
-    if(spotRes.ok){
+    if (spotRes.ok) {
       const updatedSpot = await spotRes.json();
       spotDataMap[spotId].ratingAvg = updatedSpot.ratingAvg;
       spotDataMap[spotId].ratingCount = updatedSpot.ratingCount;
     }
 
     loadSidebarReviews(spotId);
-  } catch(err){
+  } catch (err) {
     alert("Could not delete this review.");
   }
 }
@@ -277,6 +317,7 @@ async function submitReview(spotId) {
   const body = document.getElementById("sidebar-body").value.trim();
   const ratingRaw = document.getElementById("sidebar-rating").value.trim();
   const errorEl = document.getElementById("sidebar-form-error");
+  const photoFiles = document.getElementById("sidebar-photos").files;
 
   errorEl.style.display = "none";
 
@@ -287,17 +328,42 @@ async function submitReview(spotId) {
   }
 
   try {
+    let photoUrls = [];
+    if(photoFiles && photoFiles.length > 0){
+      const formData = new FormData();
+      Array.from(photoFiles).forEach(f => formData.append("photos", f));
+
+      const {token} = await fetch("/api/csrf-token").then(r => r.json());
+      const uploadRes = await fetch("/api/upload", {
+        method: "POST",
+        credentials: "include",
+        headers: { "x-csrf-token": token },
+        body: formData,
+      });
+
+      if(!uploadRes.ok){
+        errorEl.textContent = "Image upload failed. Please try again.";
+        errorEl.style.display = "block";
+        return;
+      }
+
+      const uploadData = await uploadRes.json();
+      photoUrls = uploadData.urls;
+    }
+
     const res = await fetch(`/api/spots/${spotId}/comments`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         body,
         rating: ratingRaw !== "" ? parseFloat(ratingRaw) : null,
+        photos: photoUrls,
       }),
     });
 
     if (res.status === 401) {
-      errorEl.innerHTML = 'Please <a href="/auth/login">log in</a> to leave a review.';
+      errorEl.innerHTML =
+        'Please <a href="/auth/login">log in</a> to leave a review.';
       errorEl.style.display = "block";
       return;
     }
@@ -314,44 +380,47 @@ async function submitReview(spotId) {
     if (newComment.rating !== null) {
       const spot = spotDataMap[spotId];
       spot.ratingCount += 1;
-      spot.ratingAvg = ((spot.ratingAvg * (spot.ratingCount - 1)) + newComment.rating) / spot.ratingCount;
+      spot.ratingAvg =
+        (spot.ratingAvg * (spot.ratingCount - 1) + newComment.rating) /
+        spot.ratingCount;
     }
 
     document.getElementById("sidebar-review-form").classList.remove("visible");
     document.getElementById("sidebar-body").value = "";
     document.getElementById("sidebar-rating").value = "";
+    document.getElementById("sidebar-photos").value = "";
 
     loadSidebarReviews(spotId);
-
   } catch (err) {
     errorEl.textContent = "Network error. Please try again.";
     errorEl.style.display = "block";
   }
 }
 
-function attachSidebarListeners(spotId){
+function attachSidebarListeners(spotId) {
   const addBtn = document.getElementById("add-review-btn");
   const cancelBtn = document.getElementById("cancel-review-btn");
   const submitBtn = document.getElementById("submit-review-btn");
   const form = document.getElementById("sidebar-review-form");
 
-  if(addBtn){
+  if (addBtn) {
     addBtn.onclick = () => form.classList.toggle("visible");
   }
 
-  if(cancelBtn){
+  if (cancelBtn) {
     cancelBtn.onclick = () => {
       form.classList.remove("visible");
       document.getElementById("sidebar-form-error").style.display = "none";
+      document.getElementById("sidebar-photos").value = "";
     };
   }
 
-  if(submitBtn){
+  if (submitBtn) {
     submitBtn.onclick = () => submitReview(spotId);
   }
 }
 
-function closeReviewSidebar(){
+function closeReviewSidebar() {
   const sidebar = document.getElementById("reviews-sidebar");
   sidebar.classList.add("hidden");
   sidebar.dataset.spotId = "";
@@ -361,14 +430,14 @@ function attachViewListeners(spotId) {
   const editBtn = document.getElementById("edit-spot-" + spotId);
   const deleteBtn = document.getElementById("delete-spot-" + spotId);
 
-  if (editBtn) {
+  if(editBtn){
     editBtn.onclick = (e) => {
       e.stopPropagation();
       openEditForm(spotId);
     };
   }
 
-  if (deleteBtn) {
+  if(deleteBtn){
     deleteBtn.onclick = (e) => {
       e.stopPropagation();
       deleteSpot(spotId);
@@ -376,24 +445,40 @@ function attachViewListeners(spotId) {
   }
 
   const showMoreBtn = document.getElementById("show-more-" + spotId);
-    if (showMoreBtn) {
+    if(showMoreBtn){
       showMoreBtn.onclick = (e) => {
+        e.stopPropagation();
+        map.closePopup();         
+        openReviewSidebar(spotId);
+      };
+    }
+
+  const newReviewBtn = document.getElementById("new-review-" + spotId);
+  if(newReviewBtn){
+    newReviewBtn.onclick = (e) => {
       e.stopPropagation();
-      map.closePopup();         
+      map.closePopup();
       openReviewSidebar(spotId);
+      document.getElementById("sidebar-review-form").classList.add("visible");
     };
   }
 }
 
-function addSpotMarker(spot){
+function addSpotMarker(spot) {
   spotDataMap[spot._id] = spot;
 
   const [lng, lat] = spot.location.coordinates;
-  const marker = L.marker([lat, lng], {icon: getCategoryIcon(spot.category)}).addTo(map);
+  const marker = L.marker([lat, lng], {
+    icon: getCategoryIcon(spot.category),
+  });
+
+  if(activeCategories.has(spot.category)){
+    marker.addTo(map);
+  }
 
   markerMap[spot._id] = marker;
 
-  marker.bindPopup(buildViewPopup(spot), { maxWidth:200 });
+  marker.bindPopup(buildViewPopup(spot), { maxWidth: 200 });
 
   marker.on("popupopen", () => {
     attachViewListeners(spot._id);
@@ -421,10 +506,11 @@ async function submitSpot(lat, lng) {
   const category = document.getElementById("spot-category").value;
   const errorEl = document.getElementById("create-error");
   const ratingRaw = document.getElementById("spot-rating").value.trim();
+  const photoFiles = document.getElementById("spot-photos").files;
 
-  if(ratingRaw !== ""){
+  if (ratingRaw !== "") {
     const ratingVal = parseFloat(ratingRaw);
-    if(isNaN(ratingVal) || ratingVal < 0 || ratingVal > 5){
+    if (isNaN(ratingVal) || ratingVal < 0 || ratingVal > 5) {
       errorEl.textContent = "Rating must be between 0 and 5.";
       errorEl.style.display = "block";
       return;
@@ -439,14 +525,45 @@ async function submitSpot(lat, lng) {
   errorEl.style.display = "none";
 
   try {
+    let photoUrls = [];
+    if(photoFiles && photoFiles.length > 0){
+      const formData = new FormData();
+      Array.from(photoFiles).forEach(f => formData.append("photos", f));
+
+      const {token} = await fetch("/api/csrf-token").then(r => r.json());
+      const uploadRes = await fetch("/api/upload", {
+        method: "POST",
+        credentials: "include",
+        headers: { "x-csrf-token": token },
+        body: formData,
+      });
+
+      if(!uploadRes.ok){
+        errorEl.textContent = "Image upload failed. Please try again.";
+        errorEl.style.display = "block";
+        return;
+      }
+
+      const uploadData = await uploadRes.json();
+      photoUrls = uploadData.urls;
+    }
+
     const res = await fetchWithCsrf("/api/spots", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, description, category, lat, lng, rating: ratingRaw !== "" ? parseFloat(ratingRaw) : null }),
+      body: JSON.stringify({
+        title,
+        description,
+        category,
+        lat,
+        lng,
+        rating: ratingRaw !== "" ? parseFloat(ratingRaw) : null,
+      }),
     });
 
     if (res.status === 401) {
-      errorEl.innerHTML = 'Please <a href="/auth/login">log in</a> to add a spot.';
+      errorEl.innerHTML =
+        'Please <a href="/auth/login">log in</a> to add a spot.';
       errorEl.style.display = "block";
       return;
     }
@@ -459,18 +576,30 @@ async function submitSpot(lat, lng) {
     }
 
     const newSpot = await res.json();
+
+    if(description || photoUrls.length > 0 || ratingRaw !== ""){
+      await fetchWithCsrf(`/api/spots/${newSpot._id}/comments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          body: description || "(no description)",
+          rating: ratingRaw !== "" ? parseFloat(ratingRaw) : null,
+          photos: photoUrls,
+        }),
+      });
+    }
+
     newSpot.author = { _id: currentUserId };
     map.closePopup();
     addSpotMarker(newSpot);
-
   } catch (err) {
     errorEl.textContent = "Network error. Please try again.";
     errorEl.style.display = "block";
   }
 }
 
-function buildEditForm(spot){
-  return`
+function buildEditForm(spot) {
+  return `
     <div class="edit-spot-form">
       <h3>Edit Spot</h3>
 
@@ -500,7 +629,7 @@ function buildEditForm(spot){
   `;
 }
 
-function openEditForm(spotId){
+function openEditForm(spotId) {
   const spot = spotDataMap[spotId];
   const marker = markerMap[spotId];
 
@@ -509,24 +638,30 @@ function openEditForm(spotId){
   const saveBtn = document.getElementById("save-spot-" + spotId);
   const cancelBtn = document.getElementById("cancel-edit-" + spotId);
 
-  if(saveBtn) saveBtn.onclick = (e) => {
-    e.stopPropagation();
-    submitEdit(spotId);
-  };
+  if (saveBtn)
+    saveBtn.onclick = (e) => {
+      e.stopPropagation();
+      submitEdit(spotId);
+    };
 
-  if(cancelBtn) cancelBtn.onclick = (e) => {
-    e.stopPropagation();
-    marker.setPopupContent(buildViewPopup(spotDataMap[spotId]));
-    attachViewListeners(spotId);
-  };
+  if (cancelBtn)
+    cancelBtn.onclick = (e) => {
+      e.stopPropagation();
+      marker.setPopupContent(buildViewPopup(spotDataMap[spotId]));
+      attachViewListeners(spotId);
+    };
 }
 
-async function submitEdit(spotId){
+async function submitEdit(spotId) {
   const title = document.getElementById("edit-title-" + spotId).value.trim();
-  const description = document.getElementById("edit-description-" + spotId).value.trim();
+  const description = document
+    .getElementById("edit-description-" + spotId)
+    .value.trim();
   const category = document.getElementById("edit-category-" + spotId).value;
   const errorEl = document.getElementById("edit-error-" + spotId);
-  const ratingRaw = document.getElementById("edit-rating-" + spotId).value.trim();
+  const ratingRaw = document
+    .getElementById("edit-rating-" + spotId)
+    .value.trim();
 
   if (!title) {
     errorEl.textContent = "Title is required.";
@@ -549,7 +684,12 @@ async function submitEdit(spotId){
     const res = await fetchWithCsrf("/api/spots/" + spotId, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, description, category, rating: ratingRaw !== "" ? parseFloat(ratingRaw) : null }),
+      body: JSON.stringify({
+        title,
+        description,
+        category,
+        rating: ratingRaw !== "" ? parseFloat(ratingRaw) : null,
+      }),
     });
 
     if (!res.ok) {
@@ -564,7 +704,6 @@ async function submitEdit(spotId){
     spotDataMap[spotId] = updatedSpot;
     markerMap[spotId].setPopupContent(buildViewPopup(updatedSpot));
     attachViewListeners(spotId);
-
   } catch (err) {
     errorEl.textContent = "Network error. Please try again.";
     errorEl.style.display = "block";
@@ -572,7 +711,9 @@ async function submitEdit(spotId){
 }
 
 async function deleteSpot(spotId) {
-  const confirmed = window.confirm("Are you sure you want to delete this spot?");
+  const confirmed = window.confirm(
+    "Are you sure you want to delete this spot?",
+  );
   if (!confirmed) return;
 
   try {
@@ -590,7 +731,6 @@ async function deleteSpot(spotId) {
     markerMap[spotId].remove();
     delete markerMap[spotId];
     delete spotDataMap[spotId];
-
   } catch (err) {
     alert("Network error. Could not delete this spot.");
   }
@@ -598,12 +738,12 @@ async function deleteSpot(spotId) {
 
 map.on("click", (e) => {
   const sidebar = document.getElementById("reviews-sidebar");
-  if(!sidebar.classList.contains("hidden")){
+  if (!sidebar.classList.contains("hidden")) {
     closeReviewSidebar();
     return;
   }
 
-  if(e.originalEvent.target.closest(".leaflet-popup")) return;
+  if (e.originalEvent.target.closest(".leaflet-popup")) return;
 
   const { lat, lng } = e.latlng;
 
@@ -612,10 +752,25 @@ map.on("click", (e) => {
     .setContent(buildCreateForm())
     .openOn(map);
 
-  document.getElementById("submit-spot").addEventListener("click", () => submitSpot(lat, lng));
-  
+  document
+    .getElementById("submit-spot")
+    .addEventListener("click", () => submitSpot(lat, lng));
 });
 
 loadCurrentUser().then(() => {
   loadSpots();
+});
+
+document.querySelectorAll(".filter-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const category = btn.dataset.category;
+    if (activeCategories.has(category)) {
+      activeCategories.delete(category);
+      btn.classList.remove("active");
+    } else {
+      activeCategories.add(category);
+      btn.classList.add("active");
+    }
+    applyFilter();
+  });
 });

@@ -8,12 +8,14 @@ Our project is a social network app for UC Riverside students to connect more ar
 - Database - MongoDB Atlas
 - Frontend - HTML, CSS, JavaScript
 - Map - Leaflet.js with OpenStreetMap
+- Image Hosting - Cloudinary (via multer for upload handling)
 
 ## Setup & Running Locally
 
 1. **Prerequisites**
 - Node.js
 - A MongoDB Atlas account
+- A Cloudinary account
 
 2. **Clone the repository**
    ```bash
@@ -29,17 +31,21 @@ Our project is a social network app for UC Riverside students to connect more ar
 4. **Configure .env file**
 
    Copy `.env.example` to `.env` and fill in values according to template
-   
+
    ```
    ATLAS_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/myDatabase?retryWrites=true&w=majority
+
+   CLOUDINARY_CLOUD_NAME=your_cloud_name_here
+   CLOUDINARY_API_KEY=your_api_key_here
+   CLOUDINARY_API_SECRET=your_api_secret_here
    ```
 
-6. **Start the server**
+5. **Start the server**
    ```bash
    npm start
    ```
 
-7. **Open the app**
+6. **Open the app**
 
    Navigate to `http://localhost:3000` in your browser.
 

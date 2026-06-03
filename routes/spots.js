@@ -62,8 +62,8 @@ router.post("/", isAuthenticated, async (req, res) => {
         coordinates: [parseFloat(lng), parseFloat(lat)],
       },
       author: req.session.userId,
-      ratingAvg: rating ? parseFloat(rating) : 0,
-      ratingCount: rating ? 1 : 0,
+      ratingAvg: 0,
+      ratingCount: 0,
     });
     res.status(201).json(spot);
   } catch (err) {
