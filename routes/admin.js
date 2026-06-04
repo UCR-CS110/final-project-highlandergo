@@ -5,10 +5,10 @@ const Spot = require('../models/Spot');
 const Comment = require('../models/Comment');
 const isAdmin = require('../middleware/isAdmin');
 
-// Protect all admin routes
+// only access with admin priv
 router.use(isAdmin);
 
-// Dashboard stats
+// dashboard stats
 router.get('/stats', async (req, res) => {
     try {
         const totalUsers = await User.countDocuments();
@@ -35,7 +35,7 @@ router.get('/users', async (req, res) => {
     }
 });
 
-// Update user role or ban
+// update user role or ban
 router.put('/users/:id', async (req, res) => {
     try {
         const { role, banned } = req.body;
@@ -51,7 +51,7 @@ router.put('/users/:id', async (req, res) => {
     }
 });
 
-// Soft delete a spot
+// soft delete a spot
 router.delete('/spots/:id', async (req, res) => {
     try {
         const spot = await Spot.findByIdAndUpdate(
@@ -66,7 +66,7 @@ router.delete('/spots/:id', async (req, res) => {
     }
 });
 
-// Get all spots
+// get all spots
 router.get('/spots', async (req, res) => {
     try {
         const spots = await Spot.find({ deleted: { $ne: true } })
@@ -79,7 +79,7 @@ router.get('/spots', async (req, res) => {
     }
 });
 
-// Delete a comment
+// delete a comment
 router.delete('/comments/:id', async (req, res) => {
     try {
         await Comment.findByIdAndDelete(req.params.id);
