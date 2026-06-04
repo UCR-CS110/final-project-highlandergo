@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Highlander GO - Admin</title>
+    <link rel="stylesheet" href="admin.css" />
+</head>
+<body>
+    <nav class="navbar">
+        <span class="navbar-brand">Highlander GO — Admin</span>
+        <div class="navbar-links">
+            <a href="/map.html">Map</a>
+        </div>
+        <a href="/auth/logout" class="navbar-logout">Logout</a>
+    </nav>
+
+    <div class="admin-container">
+        <div class="stats-bar" id="stats-bar">Loading...</div>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="showTab('users')">Users</button>
+            <button class="tab-btn" onclick="showTab('spots')">Spots</button>
+        </div>
+
+        <div id="tab-users" class="tab-content">
+            <table class="admin-table" id="users-table">
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Joined</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="users-body"></tbody>
+            </table>
+        </div>
+
+        <div id="tab-spots" class="tab-content" style="display:none;">
+            <table class="admin-table" id="spots-table">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Category</th>
+                        <th>Author</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="spots-body"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="admin.js"></script>
+</body>
+</html>
