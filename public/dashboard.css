@@ -61,6 +61,14 @@ body {
   overflow-y: auto;
 }
 
+#search-category-label {
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 6px;
+  color: white;
+}
+
 #search-dropdown.hidden {
   display: none;
 }
