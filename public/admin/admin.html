@@ -7,20 +7,21 @@
     <link rel="stylesheet" href="admin.css" />
 </head>
 <body>
-    <nav class="navbar">
-        <span class="navbar-brand">Highlander GO — Admin</span>
-        <div class="navbar-links">
-            <a href="/map.html">Map</a>
+    <header id="dash-header">
+        <a id="dash-brand" href="/">Highlander GO — Admin</a>
+        <div id="dash-user">
+            <form action="/auth/logout" method="POST" style="margin:0;">
+                <button type="submit" class="admin-logout">Logout</button>
+            </form>
         </div>
-        <a href="/auth/logout" class="navbar-logout">Logout</a>
-    </nav>
+    </header>
 
     <div class="admin-container">
         <div class="stats-bar" id="stats-bar">Loading...</div>
 
         <div class="tabs">
-            <button class="tab-btn active" onclick="showTab('users')">Users</button>
-            <button class="tab-btn" onclick="showTab('spots')">Spots</button>
+            <button class="tab-btn active" data-tab="users">Users</button>
+            <button class="tab-btn" data-tab="spots">Spots</button>
         </div>
 
         <div id="tab-users" class="tab-content">

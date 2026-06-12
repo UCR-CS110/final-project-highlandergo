@@ -107,7 +107,25 @@ app.use("/api", profileRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use('/api/admin', adminRoutes);
 
+app.get("/user_profile/:username", (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'user_profile', 'public_profile.html'));
+});
+
 app.get('/admin', (req, res) => {
+    if (!req.session.userId || req.session.role !== 'admin') {
+        return res.status(403).send(`<!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8" />
+          <title>Access Denied</title>
+        </head>
+        <body>
+          <h1>Access Denied</h1>
+          <p>You do not have permission to view this page. Admin access is required.</p>
+          <a href="/">Back to Dashboard</a>
+        </body>
+      </html>`);
+    }
     res.sendFile(path.join(__dirname, 'public', 'admin', 'admin.html'));
 });
 app.use("/api/feed", feedRoutes);

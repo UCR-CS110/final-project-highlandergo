@@ -31,6 +31,8 @@ html, body {
   font-weight: 700;
   white-space: nowrap;
   min-width: 160px;
+  color: white;
+  text-decoration: none;
 }
 
 #dash-user {
@@ -255,4 +257,50 @@ button.dropdown-item {
   color: #e53935;
   font-size: 0.8rem;
   margin-top: 6px;
+}
+
+.follow-btn {
+  display: block;
+  margin: 20px auto 0;
+  padding: 10px 32px;
+  background: #003da5;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.follow-btn:hover {
+  background: #517fce;
+}
+
+.follow-btn.following {
+  background: #003da5;
+  position: relative;
+}
+
+.follow-btn.following:hover {
+  background: #e53935;
+  color: transparent;
+}
+
+.follow-btn.following:hover::after {
+  content: 'Unfollow';
+  color: white;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.follow-error {
+  color: #e53935;
+  font-size: 0.85rem;
+  margin-top: 8px;
+  text-align: center;
+}
+
+.follow-error a {
+  color: #003da5;
 }
