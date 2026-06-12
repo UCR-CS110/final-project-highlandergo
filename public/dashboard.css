@@ -61,6 +61,14 @@ body {
   overflow-y: auto;
 }
 
+#search-category-label {
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 6px;
+  color: white;
+}
+
 #search-dropdown.hidden {
   display: none;
 }
@@ -270,6 +278,12 @@ button.dropdown-item {
   color: #222;
 }
 
+#top-rated-section {
+  overflow-y: auto;
+  max-height: 100%;
+  flex: 1;
+}
+
 .spot-popup {
   font-family: sans-serif;
   min-width: 180px;
@@ -372,6 +386,15 @@ button.dropdown-item {
   font-family: sans-serif;
 }
 
+.feed-spot-name {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #003da5;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 4px;
+}
+
 .reviews-list {
   padding: 0px 16px;
   font-family: sans-serif;
@@ -384,6 +407,14 @@ button.dropdown-item {
 
 .review-row:last-child {
   border-bottom: none;
+}
+
+.review-row[data-spot-id] {
+  cursor: pointer;
+}
+
+.review-row[data-spot-id]:hover {
+  background: #f0f4ff;
 }
 
 .review-author-line {

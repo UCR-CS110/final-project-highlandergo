@@ -37,9 +37,8 @@
       <nav id="dash-left">
         <ul class="dash-nav-list">
           <li><a href="/map" class="dash-nav-link">Map</a></li>
-          <li><a href="#" class="dash-nav-link">Feed</a></li>
-          <li><a href="#" class="dash-nav-link">Friends</a></li>
-          <li><a href="#" class="dash-nav-link">Settings</a></li>
+          <li><a href="#" id="feed-nav-link" class="dash-nav-link">Feed</a></li>
+          <li><a href="/user_profile/profile.html" class="dash-nav-link">Settings</a></li>
           <li><a href="/map" class="dash-nav-link">Add New Spot</a></li>
         </ul>
       </nav>
@@ -56,11 +55,12 @@
 
       <aside id="dash-right">
         <div id="dash-reviews-sidebar" class="dash-sidebar hidden"></div>
-        <div class="dash-right-section">
+        <div id="dash-feed-sidebar" class="dash-sidebar hidden"></div>
+        <div id="top-rated-section" class = "dash-right-section">
           <h3 class="dash-right-title">Top Rated Spots</h3>
-        </div>
-        <div class="dash-right-section">
-          <h3 class="dash-right-title">Friend Activity</h3>
+          <div class="reviews-list" id="top-rated-list">
+            <p class="no-reviews-msg">Loading...</p>
+          </div>
         </div>
       </aside>
     </div>

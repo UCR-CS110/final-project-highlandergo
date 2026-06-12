@@ -11,6 +11,7 @@ const spotRoutes = require("./routes/spots");
 const searchRoutes = require("./routes/search");
 const profileRoutes = require('./routes/profile');
 const uploadRoutes = require("./routes/upload");
+const feedRoutes = require("./routes/feed");
 const cookieParser = require("cookie-parser");
 const { mongoSanitize, helmet } = require("./middleware/sanitize");
 const { doubleCsrf } = require("csrf-csrf");
@@ -109,6 +110,7 @@ app.use('/api/admin', adminRoutes);
 app.get('/admin', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'admin', 'admin.html'));
 });
+app.use("/api/feed", feedRoutes);
 
 app.get("/api/csrf-token", (req, res) => {
   res.json({ token: generateCsrfToken(req, res) });

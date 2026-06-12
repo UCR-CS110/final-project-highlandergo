@@ -58,6 +58,218 @@ function getCategoryIcon(category) {
   }
 }
 
+function buildFeedRow(comment) {
+  let spotName = "";
+  if (comment.spot) {
+    spotName = comment.spot.title;
+  }
+
+  let username = "";
+  if (comment.author) {
+    username = comment.author.username;
+  }
+
+  let ratingHtml = "";
+  if (comment.rating != null && comment.rating !== undefined) {
+    ratingHtml = `<div class="review-rating">&#11088; ${parseFloat(comment.rating).toFixed(1)}</div>`;
+  }
+
+  let bodyHtml = "";
+  if (comment.body) {
+    bodyHtml = `<div class="review-body">${comment.body}</div>`;
+  }
+
+  let formatDate = "";
+  if (comment.createdAt) {
+    formatDate = new Date(comment.createdAt).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    });
+  }
+
+  const spotId = comment.spot ? comment.spot._id : "";
+
+  return `
+    <div class="review-row" ${spotId ? `data-spot-id="${spotId}"` : ""}>
+      <div class="feed-spot-name">${spotName}</div>
+      <div class="review-author-line">
+        <span class="review-username">${username}</span>
+        <span class="review-date">${formatDate}</span>
+      </div>
+      ${ratingHtml}
+      ${bodyHtml}
+    </div>
+  `;
+}
+
+function buildTopRatedRow(spot) {
+  let ratingHtml = "";
+  if (spot.ratingCount > 0) {
+    ratingHtml = `<div class="review-rating">&#11088; ${spot.ratingAvg.toFixed(1)} <span class="rating-count">(${spot.ratingCount})</span></div>`;
+  } else {
+    ratingHtml = `<div class="review-rating"><span class="no-rating">No ratings yet</span></div>`;
+  }
+
+  return `
+    <div class="review-row" data-spot-id="${spot._id}">
+      <div class="review-author-line">
+        <span class="feed-spot-name">${spot.title}</span>
+        <span class="spot-category ${spot.category}">${spot.category}</span>
+      </div>
+      ${ratingHtml}
+    </div>
+  `;
+}
+
+async function loadTopRatedSpots(skip) {
+  const listEl = document.getElementById("top-rated-list");
+  if (!listEl) return;
+
+  const existingShowMore = document.getElementById("top-rated-show-more");
+  if (existingShowMore) existingShowMore.remove();
+
+  try {
+    const res = await fetch(`/api/feed/top-spots?limit=5&skip=${skip}`);
+    if (!res.ok) throw new Error();
+    const spots = await res.json();
+
+    if (skip === 0 && spots.length === 0) {
+      listEl.innerHTML = `<p class="no-reviews-msg">No spots yet.</p>`;
+      return;
+    }
+
+    if (skip === 0) {
+      listEl.innerHTML = "";
+    }
+
+    spots.forEach((spot) => {
+      listEl.insertAdjacentHTML("beforeend", buildTopRatedRow(spot));
+    });
+
+    listEl.querySelectorAll(".review-row[data-spot-id]").forEach((row) => {
+      row.onclick = () => {
+        const spotId = row.dataset.spotId;
+        const spot = dashSpotDataMap[spotId];
+        if (!spot) return;
+
+        const [lng, lat] = spot.location.coordinates;
+        map.setView([lat, lng], 18);
+
+        const marker = dashMarkerMap[spotId];
+        if (marker) {
+          if (!map.hasLayer(marker)) marker.addTo(map);
+          marker.openPopup();
+        }
+      };
+    });
+
+    if (spots.length === 5) {
+      listEl.insertAdjacentHTML(
+        "beforeend",
+        `
+        <button id="top-rated-show-more" class="show-more-btn">Show More</button>
+      `,
+      );
+      document
+        .getElementById("top-rated-show-more")
+        .addEventListener("click", () => {
+          loadTopRatedSpots(skip + 5);
+        });
+    }
+  } catch (err) {
+    if (skip === 0) {
+      listEl.innerHTML = `<p class="no-reviews-msg">Could not load spots.</p>`;
+    }
+  }
+}
+
+function openFeedSidebar() {
+  const reviewSidebar = document.getElementById("dash-reviews-sidebar");
+  if (!reviewSidebar.classList.contains("hidden")) {
+    reviewSidebar.classList.add("hidden");
+  }
+
+  const sidebar = document.getElementById("dash-feed-sidebar");
+  sidebar.innerHTML = `
+    <div class="sidebar-header">
+      <h3 class="sidebar-title">Recent Reviews</h3>
+    </div>
+    <div class="reviews-list" id="feed-reviews-list">
+      <p class="no-reviews-msg">Loading...</p>
+    </div>
+  `;
+
+  sidebar.classList.remove("hidden");
+  loadFeedComments(0);
+}
+
+async function loadFeedComments(skip) {
+  const listEl = document.getElementById("feed-reviews-list");
+  if (!listEl) return;
+
+  const existingShowMore = document.getElementById("feed-show-more");
+  if (existingShowMore) existingShowMore.remove();
+
+  try {
+    const res = await fetch(`/api/feed/comments?limit=5&skip=${skip}`);
+    if (!res.ok) throw new Error();
+
+    const comments = await res.json();
+
+    if (skip === 0 && comments.length === 0) {
+      listEl.innerHTML = `<p class="no-reviews-msg">No reviews yet.</p>`;
+      return;
+    }
+
+    if (skip === 0) {
+      listEl.innerHTML = "";
+    }
+
+    comments.forEach((comment) => {
+      listEl.insertAdjacentHTML("beforeend", buildFeedRow(comment));
+    });
+
+    listEl.querySelectorAll(".review-row[data-spot-id]").forEach((row) => {
+      row.onclick = () => {
+        const spotId = row.dataset.spotId;
+        const spot = dashSpotDataMap[spotId];
+        if (!spot) return;
+
+        document.getElementById("dash-feed-sidebar").classList.add("hidden");
+
+        const [lng, lat] = spot.location.coordinates;
+        map.setView([lat, lng], 18);
+
+        const marker = dashMarkerMap[spotId];
+        if (marker) {
+          if (!map.hasLayer(marker)) marker.addTo(map);
+
+          marker.openPopup();
+        }
+      };
+    });
+
+    if (comments.length === 5) {
+      listEl.insertAdjacentHTML(
+        "beforeend",
+        `
+        <button id="feed-show-more" class="show-more-btn">Show More</button>
+      `,
+      );
+      document
+        .getElementById("feed-show-more")
+        .addEventListener("click", () => {
+          loadFeedComments(skip + 5);
+        });
+    }
+  } catch (err) {
+    if (skip === 0) {
+      listEl.innerHTML = `<p class="no-reviews-msg">Could not load reviews.</p>`;
+    }
+  }
+}
+
 function buildDashPopup(spot) {
   let ratingDisplay = "";
   if (spot.ratingCount > 0) {
@@ -269,6 +481,24 @@ function clearSearchDropdown() {
   dropdown.classList.add("hidden");
 }
 
+async function runSearch(q) {
+  try {
+    const lower = q.toLowerCase().trim();
+    const validCategories = ["food", "study", "other"];
+
+    const url = validCategories.includes(lower)
+      ? `/api/search?category=${encodeURIComponent(lower)}`
+      : `/api/search?q=${encodeURIComponent(q)}`;
+
+    const res = await fetch(url);
+    if (!res.ok) throw new Error();
+    const spots = await res.json();
+    renderSearchDropdown(spots);
+  } catch (err) {
+    clearSearchDropdown();
+  }
+}
+
 function renderSearchDropdown(spots) {
   const dropdown = document.getElementById("search-dropdown");
 
@@ -278,17 +508,28 @@ function renderSearchDropdown(spots) {
     return;
   }
 
-  const html = spots
-    .map((spot) => {
-      const category = spot.category || "other";
-      return `
-			<div class="search-result-item" data-spot-id="${spot._id}">
-				<span class="search-result-title">${spot.title}</span>
-				<span class="spot-category ${category}">${category}</span>
-			</div>
-		`;
-    })
-    .join("");
+  const grouped = { food: [], study: [], other: [] };
+  spots.forEach((spot) => {
+    const cat = grouped[spot.category] !== undefined ? spot.category : "other";
+    grouped[cat].push(spot);
+  });
+
+  const labels = { food: "Food", study: "Study", other: "Other" };
+
+  let html = "";
+  ["food", "study", "other"].forEach((cat) => {
+    if (grouped[cat].length === 0) return;
+
+    html += `<div class="search-category-label">${labels[cat]}</div>`;
+    grouped[cat].forEach((spot) => {
+      html += `
+        <div class="search-result-item" data-spot-id="${spot._id}">
+          <span class="search-result-title">${spot.title}</span>
+          <span class="spot-category ${spot.category}">${spot.category}</span>
+        </div>
+      `;
+    });
+  });
 
   dropdown.innerHTML = html;
   dropdown.classList.remove("hidden");
@@ -314,26 +555,21 @@ function renderSearchDropdown(spots) {
   });
 }
 
-async function runSearch(q) {
-  try {
-    const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
-    if (!res.ok) throw new Error();
-    const spots = await res.json();
-    renderSearchDropdown(spots);
-  } catch (err) {
-    clearSearchDropdown();
-  }
-}
-
 map.on("click", () => {
-  const sidebar = document.getElementById("dash-reviews-sidebar");
-  if (!sidebar.classList.contains("hidden")) {
-    sidebar.classList.add("hidden");
+  const reviewSidebar = document.getElementById("dash-reviews-sidebar");
+  if (!reviewSidebar.classList.contains("hidden")) {
+    reviewSidebar.classList.add("hidden");
+  }
+
+  const feedSidebar = document.getElementById("dash-feed-sidebar");
+  if (!feedSidebar.classList.contains("hidden")) {
+    feedSidebar.classList.add("hidden");
   }
 });
 
 loadDashSpots();
 initUserDropdown();
+loadTopRatedSpots(0);
 
 const searchInput = document.getElementById("search-input");
 
@@ -365,4 +601,9 @@ document.querySelectorAll(".filter-btn").forEach((btn) => {
     }
     applyFilter();
   });
+});
+
+document.getElementById("feed-nav-link").addEventListener("click", (e) => {
+  e.preventDefault();
+  openFeedSidebar();
 });
