@@ -15,6 +15,7 @@ const feedRoutes = require("./routes/feed");
 const cookieParser = require("cookie-parser");
 const { mongoSanitize, helmet } = require("./middleware/sanitize");
 const { doubleCsrf } = require("csrf-csrf");
+const adminRoutes = require('./routes/admin');
 
 const { generateCsrfToken, doubleCsrfProtection } = doubleCsrf({
   getSecret: () => process.env.SESSION_SECRET || "fallback-secret",
@@ -104,6 +105,11 @@ app.use("/map", mapRoutes);
 app.use("/api/search", searchRoutes);
 app.use("/api", profileRoutes);
 app.use("/api/upload", uploadRoutes);
+app.use('/api/admin', adminRoutes);
+
+app.get('/admin', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'admin', 'admin.html'));
+});
 app.use("/api/feed", feedRoutes);
 
 app.get("/api/csrf-token", (req, res) => {
