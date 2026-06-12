@@ -40,7 +40,12 @@ const UserSchema = new mongoose.Schema(
     banned: {
       type: Boolean,
       default: false
-    }
+    },
+    following: {
+      type: [mongoose.Schema.Types.ObjectId],
+      ref: 'User',
+      default: [],
+    },
   },
   { timestamps: true },
 );

@@ -1,3 +1,21 @@
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => showTab(btn.dataset.tab, btn));
+});
+
+document.getElementById('users-body').addEventListener('change', e => {
+    const sel = e.target.closest('[data-action="role"]');
+    if (sel) updateUser(sel.dataset.id, sel.value, sel.dataset.banned === 'true');
+});
+document.getElementById('users-body').addEventListener('click', e => {
+    const btn = e.target.closest('[data-action="ban"]');
+    if (btn) updateUser(btn.dataset.id, btn.dataset.role, btn.dataset.banned === 'true');
+});
+
+document.getElementById('spots-body').addEventListener('click', e => {
+    const btn = e.target.closest('[data-action="delete"]');
+    if (btn) deleteSpot(btn.dataset.id);
+});
+
 async function loadStats() {
     const res = await fetch('/api/admin/stats', { credentials: 'include' });
     if (res.status === 403) {
@@ -23,14 +41,14 @@ async function loadUsers() {
             <td>${u.username}</td>
             <td>${u.email}</td>
             <td>
-                <select onchange="updateUser('${u._id}', this.value, ${u.banned || false})">
+                <select data-action="role" data-id="${u._id}" data-banned="${u.banned || false}">
                     <option ${u.role === 'user' ? 'selected' : ''}>user</option>
                     <option ${u.role === 'admin' ? 'selected' : ''}>admin</option>
                 </select>
             </td>
             <td>${new Date(u.createdAt).toLocaleDateString()}</td>
             <td>
-                <button class="btn-ban" onclick="updateUser('${u._id}', '${u.role}', ${!u.banned})">
+                <button class="btn-ban" data-action="ban" data-id="${u._id}" data-role="${u.role}" data-banned="${!u.banned}">
                     ${u.banned ? 'Unban' : 'Ban'}
                 </button>
             </td>
@@ -58,7 +76,7 @@ async function loadSpots() {
             <td>${s.author?.username || 'unknown'}</td>
             <td>${new Date(s.createdAt).toLocaleDateString()}</td>
             <td>
-                <button class="btn-delete" onclick="deleteSpot('${s._id}')">Delete</button>
+                <button class="btn-delete" data-action="delete" data-id="${s._id}">Delete</button>
             </td>
         </tr>
     `).join('');
@@ -73,11 +91,11 @@ async function deleteSpot(id) {
     loadSpots();
 }
 
-function showTab(tab) {
+function showTab(tab, btn) {
     document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
     document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
     document.getElementById(`tab-${tab}`).style.display = 'block';
-    event.target.classList.add('active');
+    btn.classList.add('active');
 }
 
 loadStats();

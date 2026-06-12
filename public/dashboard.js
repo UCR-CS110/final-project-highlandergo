@@ -204,6 +204,87 @@ function openFeedSidebar() {
   loadFeedComments(0);
 }
 
+function openFollowingSidebar() {
+  document.getElementById("dash-reviews-sidebar").classList.add("hidden");
+  document.getElementById("dash-feed-sidebar").classList.add("hidden");
+
+  const sidebar = document.getElementById("dash-following-sidebar");
+  sidebar.innerHTML = `
+    <div class="sidebar-header">
+      <h3 class="sidebar-title">Following</h3>
+    </div>
+    <div class="reviews-list" id="following-reviews-list">
+      <p class="no-reviews-msg">Loading...</p>
+    </div>
+  `;
+
+  sidebar.classList.remove("hidden");
+  loadFollowingComments(0);
+}
+
+async function loadFollowingComments(skip) {
+  const listEl = document.getElementById("following-reviews-list");
+  if (!listEl) return;
+
+  const existingShowMore = document.getElementById("following-show-more");
+  if (existingShowMore) existingShowMore.remove();
+
+  try {
+    const res = await fetch(`/api/feed/following?limit=5&skip=${skip}`);
+    if (!res.ok) throw new Error();
+
+    const comments = await res.json();
+
+    if (skip === 0 && comments.length === 0) {
+      listEl.innerHTML = `<p class="no-reviews-msg">No reviews from people you follow yet.</p>`;
+      return;
+    }
+
+    if (skip === 0) {
+      listEl.innerHTML = "";
+    }
+
+    comments.forEach((comment) => {
+      listEl.insertAdjacentHTML("beforeend", buildFeedRow(comment));
+    });
+
+    listEl.querySelectorAll(".review-row[data-spot-id]").forEach((row) => {
+      row.onclick = () => {
+        const spotId = row.dataset.spotId;
+        const spot = dashSpotDataMap[spotId];
+        if (!spot) return;
+
+        document.getElementById("dash-following-sidebar").classList.add("hidden");
+
+        const [lng, lat] = spot.location.coordinates;
+        map.setView([lat, lng], 18);
+
+        const marker = dashMarkerMap[spotId];
+        if (marker) {
+          if (!map.hasLayer(marker)) marker.addTo(map);
+          marker.openPopup();
+        }
+      };
+    });
+
+    if (comments.length === 5) {
+      listEl.insertAdjacentHTML(
+        "beforeend",
+        `<button id="following-show-more" class="show-more-btn">Show More</button>`,
+      );
+      document
+        .getElementById("following-show-more")
+        .addEventListener("click", () => {
+          loadFollowingComments(skip + 5);
+        });
+    }
+  } catch (err) {
+    if (skip === 0) {
+      listEl.innerHTML = `<p class="no-reviews-msg">Could not load reviews.</p>`;
+    }
+  }
+}
+
 async function loadFeedComments(skip) {
   const listEl = document.getElementById("feed-reviews-list");
   if (!listEl) return;
@@ -441,6 +522,7 @@ async function loadDashReviews(spotId) {
 async function initUserDropdown() {
   const btn = document.getElementById("user-icon-btn");
   const dropdown = document.getElementById("user-dropdown");
+  const avatarImg = document.getElementById("user-avatar-img");
 
   let res;
   try {
@@ -452,6 +534,18 @@ async function initUserDropdown() {
   const data = await res.json();
 
   if (data.userId) {
+    try{
+      const profileRes = await fetch("/api/user/profile", { credentials: "include" });
+      if(profileRes.ok){
+        const profile = await profileRes.json();
+        if(profile.avatar){
+          avatarImg.src = profile.avatar;
+        }
+      }
+    } catch(e){
+      
+    }
+
     dropdown.innerHTML = `
     	<div class="dropdown-username">Signed in</div>
     	<form method="POST" action="/auth/logout" class="logout-form">
@@ -486,55 +580,84 @@ async function runSearch(q) {
     const lower = q.toLowerCase().trim();
     const validCategories = ["food", "study", "other"];
 
-    const url = validCategories.includes(lower)
+    const spotUrl = validCategories.includes(lower)
       ? `/api/search?category=${encodeURIComponent(lower)}`
       : `/api/search?q=${encodeURIComponent(q)}`;
 
-    const res = await fetch(url);
-    if (!res.ok) throw new Error();
-    const spots = await res.json();
-    renderSearchDropdown(spots);
+    const [spotsRes, usersRes] = await Promise.all([
+      fetch(spotUrl),
+      fetch(`/api/search/users?q=${encodeURIComponent(q)}`),
+    ]);
+
+    const spots = spotsRes.ok ? await spotsRes.json() : [];
+    const users = usersRes.ok ? await usersRes.json() : [];
+
+    renderSearchDropdown(spots, users);
   } catch (err) {
     clearSearchDropdown();
   }
 }
 
-function renderSearchDropdown(spots) {
+function renderSearchDropdown(spots, users = []) {
   const dropdown = document.getElementById("search-dropdown");
 
-  if (!spots || spots.length === 0) {
-    dropdown.innerHTML = `<div class="search-no-results">No spots found</div>`;
-    dropdown.classList.remove("hidden");
-    return;
-  }
-
-  const grouped = { food: [], study: [], other: [] };
-  spots.forEach((spot) => {
-    const cat = grouped[spot.category] !== undefined ? spot.category : "other";
-    grouped[cat].push(spot);
-  });
-
-  const labels = { food: "Food", study: "Study", other: "Other" };
-
-  let html = "";
-  ["food", "study", "other"].forEach((cat) => {
-    if (grouped[cat].length === 0) return;
-
-    html += `<div class="search-category-label">${labels[cat]}</div>`;
-    grouped[cat].forEach((spot) => {
-      html += `
-        <div class="search-result-item" data-spot-id="${spot._id}">
-          <span class="search-result-title">${spot.title}</span>
-          <span class="spot-category ${spot.category}">${spot.category}</span>
+  let peopleHtml = "";
+  if(users.length > 0){
+    peopleHtml += `<div class="search-category-label">People</div>`;
+    users.forEach((user) => {
+      peopleHtml += `
+        <div class="search-result-item search-user-item" data-username="${user.username}">
+          <span class="search-result-title">${user.username}</span>
         </div>
       `;
     });
+  }
+
+  if (!spots || spots.length === 0) {
+    if(users.length === 0){
+      dropdown.innerHTML = `<div class="search-no-results">No results found</div>`;
+      dropdown.classList.remove("hidden");
+      return;
+    }
+    dropdown.innerHTML = peopleHtml;
+    dropdown.classList.remove("hidden");
+  } else {
+    const grouped = { food: [], study: [], other: [] };
+    spots.forEach((spot) => {
+      const cat = grouped[spot.category] !== undefined ? spot.category : "other";
+      grouped[cat].push(spot);
+    });
+
+    const labels = { food: "Food", study: "Study", other: "Other" };
+
+    let spotsHtml = "";
+    ["food", "study", "other"].forEach((cat) => {
+      if (grouped[cat].length === 0) return;
+
+      spotsHtml += `<div class="search-category-label">${labels[cat]}</div>`;
+      grouped[cat].forEach((spot) => {
+        spotsHtml += `
+          <div class="search-result-item" data-spot-id="${spot._id}">
+            <span class="search-result-title">${spot.title}</span>
+            <span class="spot-category ${spot.category}">${spot.category}</span>
+          </div>
+        `;
+      });
+    });
+
+    dropdown.innerHTML = peopleHtml + spotsHtml;
+    dropdown.classList.remove("hidden");
+  }
+
+  dropdown.querySelectorAll(".search-user-item").forEach((item) => {
+    item.addEventListener("click", () => {
+      clearSearchDropdown();
+      document.getElementById("search-input").value = "";
+      window.location.href = `/user_profile/${item.dataset.username}`;
+    });
   });
 
-  dropdown.innerHTML = html;
-  dropdown.classList.remove("hidden");
-
-  dropdown.querySelectorAll(".search-result-item").forEach((item) => {
+  dropdown.querySelectorAll(".search-result-item:not(.search-user-item)").forEach((item) => {
     item.addEventListener("click", () => {
       const spotId = item.dataset.spotId;
       const spot = dashSpotDataMap[spotId];
@@ -564,6 +687,11 @@ map.on("click", () => {
   const feedSidebar = document.getElementById("dash-feed-sidebar");
   if (!feedSidebar.classList.contains("hidden")) {
     feedSidebar.classList.add("hidden");
+  }
+
+  const followingSidebar = document.getElementById("dash-following-sidebar");
+  if (!followingSidebar.classList.contains("hidden")) {
+    followingSidebar.classList.add("hidden");
   }
 });
 
@@ -606,4 +734,9 @@ document.querySelectorAll(".filter-btn").forEach((btn) => {
 document.getElementById("feed-nav-link").addEventListener("click", (e) => {
   e.preventDefault();
   openFeedSidebar();
+});
+
+document.getElementById("following-nav-link").addEventListener("click", (e) => {
+  e.preventDefault();
+  openFollowingSidebar();
 });

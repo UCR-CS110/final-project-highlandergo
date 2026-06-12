@@ -12,7 +12,7 @@ router.use(isAdmin);
 router.get('/stats', async (req, res) => {
     try {
         const totalUsers = await User.countDocuments();
-        const totalSpots = await Spot.countDocuments({ deleted: { $ne: true } });
+        const totalSpots = await Spot.countDocuments({ isDeleted: { $ne: true } });
         const recentSignups = await User.find()
             .sort({ createdAt: -1 })
             .limit(5)
@@ -28,7 +28,7 @@ router.get('/users', async (req, res) => {
     try {
         const users = await User.find()
             .sort({ createdAt: -1 })
-            .select('username email role createdAt');
+            .select('username email role createdAt banned');
         res.json(users);
     } catch (err) {
         res.status(500).json({ error: 'Server error' });
@@ -56,7 +56,7 @@ router.delete('/spots/:id', async (req, res) => {
     try {
         const spot = await Spot.findByIdAndUpdate(
             req.params.id,
-            { deleted: true },
+            { isDeleted: true },
             { new: true }
         );
         if (!spot) return res.status(404).json({ error: 'Spot not found' });
@@ -69,7 +69,7 @@ router.delete('/spots/:id', async (req, res) => {
 // get all spots
 router.get('/spots', async (req, res) => {
     try {
-        const spots = await Spot.find({ deleted: { $ne: true } })
+        const spots = await Spot.find({ isDeleted: { $ne: true } })
             .sort({ createdAt: -1 })
             .populate('author', 'username')
             .select('title category createdAt author');

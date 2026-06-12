@@ -170,10 +170,10 @@ body {
 
 .reviews-sidebar {
   position: fixed;
-  top: 0;
+  top: 90px;
   right: 0;
   width: 30%;
-  height: 100%;
+  height: calc(100% - 90px);
   background: #faf9f6;
   z-index: 1000;
   transition: transform 0.25s ease;
