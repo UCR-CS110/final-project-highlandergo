@@ -1,0 +1,141 @@
+body{
+  font-family: sans-serif;
+  margin: 0;
+  padding: 16px;
+  background: #fff;
+  color: #000;
+}
+
+.admin-header{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 16px;
+  height: 50px;
+  background: #003da5;
+  color: white;
+  margin: -16px -16px 24px -16px;
+}
+
+.admin-brand{
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: white;
+}
+
+.admin-home-link {
+  font-size: 0.9rem;
+  color: white;
+}
+
+.admin-section {
+  margin-bottom: 40px;
+}
+
+.admin-section-title{
+  font-size: 1rem;
+  margin-bottom: 8px;
+}
+
+.admin-count{
+  font-weight: normal;
+  color: #555;
+}
+
+.admin-status{
+  padding: 8px;
+  margin-bottom: 12px;
+  border: 1px solid #000;
+  font-size: 0.875rem;
+}
+
+.admin-status.success { background: #d4edda; }
+.admin-status.error   { background: #f8d7da; }
+.admin-status.hidden  { display: none; }
+
+.admin-table{
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.admin-table th,
+.admin-table td{
+  border: 1px solid #ccc;
+  padding: 6px 10px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.admin-table th{
+  background: #f0f0f0;
+}
+
+.admin-cell-wrap{
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-meta{
+  font-size: 0.75rem;
+  color: #666;
+}
+
+.admin-actions{
+  display: flex;
+  gap: 4px;
+}
+
+.btn-admin-edit,
+.btn-admin-delete,
+.btn-admin-save,
+.btn-admin-cancel{
+  padding: 3px 10px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  border: none;
+  color: white;
+}
+
+.btn-admin-edit   { background: #003da5; }
+.btn-admin-delete { background: #e53935; }
+.btn-admin-save   { background: #2e7d32; }
+.btn-admin-cancel { background: #888; }
+
+.admin-edit-form{
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px 0;
+}
+
+.admin-edit-form input,
+.admin-edit-form textarea,
+.admin-edit-form select{
+  width: 100%;
+  padding: 4px 6px;
+  font-size: 0.875rem;
+  font-family: inherit;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+}
+
+.admin-edit-form textarea{
+  resize: vertical;
+  min-height: 60px;
+}
+
+.admin-edit-buttons{
+  display: flex;
+  gap: 6px;
+}
+
+.admin-loading,
+.no-data-msg {
+  font-size: 0.875rem;
+  color: #555;
+  font-style: italic;
+  padding: 8px 0;
+}

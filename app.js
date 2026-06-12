@@ -12,6 +12,7 @@ const searchRoutes = require("./routes/search");
 const profileRoutes = require('./routes/profile');
 const uploadRoutes = require("./routes/upload");
 const feedRoutes = require("./routes/feed");
+const adminRoutes = require("./routes/admin");
 const cookieParser = require("cookie-parser");
 const { mongoSanitize, helmet } = require("./middleware/sanitize");
 const { doubleCsrf } = require("csrf-csrf");
@@ -105,6 +106,31 @@ app.use("/api/search", searchRoutes);
 app.use("/api", profileRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/feed", feedRoutes);
+
+function isAdminUser(req, res, next){
+  if (req.session.userId && req.session.role === 'admin') return next();
+  res.status(403).send(`<!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8" />
+      <title>Access Restricted</title>
+    </head>
+    <body>
+      <h1>Access Restricted</h1>
+      <p>You do not have permission to view this page. Admin access is required.</p>
+      <a href="/">Back to Dashboard</a>
+    </body>
+  </html>`);
+}
+
+app.use('/api/admin', adminRoutes);
+app.get('/admin', isAdminUser, (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+});
+
+app.get("/user_profile/:username", (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'user_profile', 'public_profile.html'));
+});
 
 app.get("/api/csrf-token", (req, res) => {
   res.json({ token: generateCsrfToken(req, res) });
