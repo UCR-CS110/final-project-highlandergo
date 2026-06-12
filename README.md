@@ -49,13 +49,43 @@ Our project is a social network app for UC Riverside students to connect more ar
 
    Navigate to `http://localhost:3000` in your browser.
 
-## Features & Working Status
+## Features
 
-### Fully Working
+### Authentication
+- **Registration & Login** — Create an account with a username, email, and password. CSRF-protected forms on both `/auth/register` and `/auth/login`.
+- **Session-based Auth** — Login sessions stored in MongoDB via `connect-mongo`
 
-- **User Registration & Login** — Create an account with a username, email, and password. Access user registration by navigating to `http://localhost:3000/auth/register` and user login by navigating to `http://localhost:3000/auth/login`
-- **Interactive Campus Map** — Leaflet.js map centered on the UCR campus. Access the interactive campus map by navigating to `http://localhost:3000/map`
-- **Drop Pins / Add Spots** — Click anywhere on the map to open a form and add a new spot with a title, category, description, and a rating.
-- **View Spot Details** — Click any existing pin to see the spot's title, category badge, rating, and description in a popup.
-- **Edit & Delete Spots** — Authors can edit or delete their own spots directly from the popup.
-- **Search API** — Backend supports a search api (`GET /api/search`).
+### Dashboard
+- **Feed** - Displays all reviews created, sorted by most recent
+- **Following** - Displays most recent reviews left by users you follow
+- **Top Rated** - Displays the highest rated spots
+- **Settings** - Routes to your profile for editing your username, bio, or avatar image
+- **Map / Add New Spot** - Routes to full map view for adding reviews
+
+### Interactive Map
+- **Campus Map** — Leaflet.js map centered on the UCR campus at `/map`
+- **Drop Pins** — Click anywhere on the map to open a form and add a new spot
+- **View Spot Details** — Click any existing pin to open a sidebar showing the spot's full details, photos, rating, and other reviews
+- **Edit & Delete Spots** — Authors can edit or delete their own spots directly
+
+### Reviews & Ratings
+- **Post Reviews** — Authenticated users can leave a text review and a rating on any existing spot
+- **Delete Reviews** — Authors and admins can delete reviews
+- **Live Rating Average** — The spot's average rating updates automatically as reviews are added or removed
+- **Photo Uploads** — Spots and reviews support image uploads hosted on Cloudinary
+
+### User Profiles
+- **Own Profile** — View and edit your username, avatar, and bio at `/user_profile/profile.html`
+- **Public Profiles** — Search and visit any user's public profile to see their profile
+- **Following** — Follow other users from their public profile page accessed by searching for their username on the dashboard
+
+### Search
+- **Search Users** — Search for other users by username from the dashboard search bar
+- **Search Categories** - Search for spots by their category (food/study/other)
+- **Search by Name** - Search for spots by their name
+
+### Admin Panel
+- **Access Control** — Only admin accounts can reach `/admin`
+- **User Management** — View all users, change roles (user/admin), and ban or unban accounts
+- **Spot Moderation** — View all spots and delete any post from the admin panel
+- **Banned Accounts** — Banned users can still log in but receive a clear error if they attempt to create a spot or post a review
