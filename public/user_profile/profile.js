@@ -5,6 +5,16 @@ async function loadProfile() {
             fetch("/api/me", { credentials: "include" })
         ]);
 
+        if (profileRes.status === 401) {
+            document.getElementById("profile-info").innerHTML = `
+                <p style="text-align:center; margin-top: 40px; font-size: 0.95rem; color: #666;">
+                    You are not currently logged in, please login 
+                    <a href="/auth/login" style="color: #003da5; font-weight: 600;">here</a>
+                </p>
+            `;
+            return;
+        }
+
         const profile = await profileRes.json();
         const me = await meRes.json();
 
