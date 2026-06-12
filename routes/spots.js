@@ -3,6 +3,7 @@ const express = require("express");
 const router = express.Router();
 const Spot = require("../models/Spot");
 const { body, validationResult } = require("express-validator");
+const isNotBanned = require("../middleware/isNotBanned");
 const isAuthenticated = (req, res, next) => {
   console.log("Session:", req.session);
   if (!req.session.userId) {
@@ -43,7 +44,7 @@ const spotValidation = [
   body("lng").isFloat({ min: -180, max: 180 }).withMessage("Invalid longitude"),
 ];
 
-router.post("/", isAuthenticated, async (req, res) => {
+router.post("/", isAuthenticated, isNotBanned, async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });

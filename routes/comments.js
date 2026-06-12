@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const Comment = require("../models/Comment");
 const Spot = require("../models/Spot");
+const isNotBanned = require("../middleware/isNotBanned");
 
 const isAuthenticated = (req, res, next) => {
   if (!req.session || !req.session.userId) {
@@ -24,7 +25,7 @@ router.get("/:spotId/comments", async (req, res) => {
   }
 });
 
-router.post("/:spotId/comments", isAuthenticated, async (req, res) => {
+router.post("/:spotId/comments", isAuthenticated, isNotBanned, async (req, res) => {
   try {
     const spot = await Spot.findOne({
       _id: req.params.spotId,
