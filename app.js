@@ -106,6 +106,10 @@ app.use("/api", profileRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/feed", feedRoutes);
 
+app.get("/user_profile/:username", (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'user_profile', 'public_profile.html'));
+});
+
 app.get("/api/csrf-token", (req, res) => {
   res.json({ token: generateCsrfToken(req, res) });
 });

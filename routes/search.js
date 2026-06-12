@@ -2,6 +2,7 @@
 const express = require("express");
 const router = express.Router();
 const Spot = require("../models/Spot");
+const User = require("../models/User");
 
 router.get("/", async (req, res) => {
   try {
@@ -61,6 +62,23 @@ router.get("/", async (req, res) => {
     if (err.message.includes("text index required")) {
       return res.json([]);
     }
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.get('/users', async (req, res) => {
+  const { q } = req.query;
+  if (!q || q.trim().length === 0) return res.json([]);
+
+  try {
+    const users = await User.find({
+      username: { $regex: q.trim(), $options: 'i' }
+    })
+      .select('username avatar')
+      .limit(5);
+
+    res.json(users);
+  } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
