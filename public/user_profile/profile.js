@@ -66,8 +66,9 @@ function openEditForm(profile) {
             <label>Bio</label>
             <textarea id="edit-bio" rows="3">${profile.bio || ''}</textarea>
 
-            <label>Avatar URL</label>
-            <input type="text" id="edit-avatar" value="${profile.avatar || ''}" placeholder="Must be a direct image URL ending in .jpg, .png, etc." />
+            <label>Avatar</label>
+            <input type="file" id="edit-avatar-file" accept="image/*" />
+
             <div id="edit-error" class="edit-error"></div>
             <div class="edit-form-buttons">
                 <button id="save-btn">Save</button>
@@ -83,7 +84,7 @@ function openEditForm(profile) {
 async function saveProfile() {
     const username = document.getElementById("edit-username").value.trim();
     const bio = document.getElementById("edit-bio").value.trim();
-    const avatar = document.getElementById("edit-avatar").value.trim();
+    const fileInput = document.getElementById("edit-avatar-file");
     const errorEl = document.getElementById("edit-error");
 
     if (!username) {
@@ -91,12 +92,43 @@ async function saveProfile() {
         return;
     }
 
+    let avatar = null;
+
+    if (fileInput.files.length > 0) {
+        try {
+            const formData = new FormData();
+            formData.append("photos", fileInput.files[0]);
+
+            const { token } = await fetch("/api/csrf-token").then((r) => r.json());
+            const uploadRes = await fetch("/api/upload", {
+                method: "POST",
+                credentials: "include",
+                headers: { "x-csrf-token": token },
+                body: formData,
+            });
+
+            if (!uploadRes.ok) {
+                errorEl.textContent = "Image upload failed.";
+                return;
+            }
+
+            const uploadData = await uploadRes.json();
+            avatar = uploadData.urls[0];
+        } catch (err) {
+            errorEl.textContent = "Image upload failed.";
+            return;
+        }
+    }
+
     try {
+        const body = { username, bio };
+        if (avatar) body.avatar = avatar;
+
         const res = await fetch("/api/user/profile", {
             method: "PUT",
             credentials: "include",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ username, bio, avatar })
+            body: JSON.stringify(body)
         });
 
         if (!res.ok) {
