@@ -13,17 +13,20 @@ Our project is a social network app for UC Riverside students to connect more ar
 ## Setup & Running Locally
 
 1. **Prerequisites**
+
 - Node.js
 - A MongoDB Atlas account
 - A Cloudinary account
 
 2. **Clone the repository**
+
    ```bash
    git clone <repo-url>
    cd final-project-highlandergo-andres-antonio-khant
    ```
 
 3. **Install dependencies**
+
    ```bash
    npm install
    ```
@@ -41,6 +44,7 @@ Our project is a social network app for UC Riverside students to connect more ar
    ```
 
 5. **Start the server**
+
    ```bash
    npm start
    ```
@@ -59,3 +63,7 @@ Our project is a social network app for UC Riverside students to connect more ar
 - **View Spot Details** — Click any existing pin to see the spot's title, category badge, rating, and description in a popup.
 - **Edit & Delete Spots** — Authors can edit or delete their own spots directly from the popup.
 - **Search API** — Backend supports a search api (`GET /api/search`).
+- **Review Posted Spots** — Make a review on an existing spot.
+- **Feed** — View recent reviews made by users.
+- **Follow Users** — Follow and unfollow users.
+- **Edit Profile** — Customize User Profile.
