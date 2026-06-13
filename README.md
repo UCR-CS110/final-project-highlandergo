@@ -1,6 +1,6 @@
 # Highlander GO
 
-Our project is a social network app for UC Riverside students to connect more around campus. Users can drop pins on an interactive map to share and review their favorite spots around campus. Other students will also be able to browse pins, read reviews, and leave reviews of their own on full deployment.
+Our project is a social network app for UC Riverside students to connect more around campus. Users can drop pins on an interactive map to share and review their favorite spots around campus. Other students will also be able to browse pins, read reviews, follow their friends, and leave reviews of their own to contribute to the app!
 
 ## Tech Stack
 
@@ -48,6 +48,14 @@ Our project is a social network app for UC Riverside students to connect more ar
 6. **Open the app**
 
    Navigate to `http://localhost:3000` in your browser.
+
+## Team Member Contributions
+- Antonio Rodriguez: Leaflet map integration, adding pins and comments, photo uploads via cloudinary, dashboard feed/top spots/following features, implementation for following users, username searching and public profile 
+- Khant Aung: User profile page, profile editing, admin route, admin panel styling, admin controls, google oauth login, login and register page design
+- Andres Lopez: Project initialization and backend strucutre, user and spot models, user registration and login, session management, text search api, CSRF protections, input sanitization and validation
+
+## AI Usage
+AI tools were utilized minimally throughout the project. Used mainly for things like resolving minor syntax errors, looking up language specific formatting, or help resolving minor issues in our work. All core logic implemented are our original ideas and work.
 
 ## Features
 
